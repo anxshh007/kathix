@@ -1,0 +1,12 @@
+node_modules/
+dist/
+data/
+.kathix-data/
+coverage/
+test-results/
+playwright-report/
+*.log
+.env
+.env.local
+.DS_Store
+assets/backgrounds/masters/*.tmp
