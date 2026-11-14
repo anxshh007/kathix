@@ -10,7 +10,7 @@ export default defineConfig({
           exclude: ['**/node_modules/**', 'packages/prompts/evals/**'],
           environment: 'node',
           testTimeout: 30000,
-          env: { KATHIX_MOCK_PROVIDER: '1' },
+          env: { KATHIX_MOCK_PROVIDER: '1', KATHIX_LOG: 'silent' },
         },
       },
       {
@@ -19,7 +19,7 @@ export default defineConfig({
           include: ['packages/prompts/evals/**/*.eval.test.ts'],
           environment: 'node',
           testTimeout: 30000,
-          env: { KATHIX_MOCK_PROVIDER: '1' },
+          env: { KATHIX_MOCK_PROVIDER: '1', KATHIX_LOG: 'silent' },
         },
       },
     ],

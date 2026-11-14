@@ -14,7 +14,7 @@
   --line-strong: rgba(255, 255, 255, 0.18);
   --text: #efe9df;
   --text-soft: #c9c3b9;
-  --muted: #9d9aa3;
+  --muted: #a8a5ae;
   --warm: #f2a650;
   --warm-ink: #1c1206;
   --warm-soft: rgba(242, 166, 80, 0.14);
@@ -176,7 +176,7 @@ p {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 9, 12, 0.62) 0%, rgba(8, 9, 12, 0.78) 45%, rgba(8, 9, 12, 0.9) 100%),
+    linear-gradient(180deg, rgba(8, 9, 12, 0.74) 0%, rgba(8, 9, 12, 0.82) 45%, rgba(8, 9, 12, 0.9) 100%),
     radial-gradient(ellipse at 20% 0%, rgba(8, 9, 12, 0.2), rgba(8, 9, 12, 0.6));
 }
 
@@ -1038,7 +1038,11 @@ html[data-focus='on'] .bg-scrim {
 }
 
 .editor .k-speaker {
-  font-weight: 650;
+  font-family: var(--ui-font);
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
 }
 
 .editor .k-note {

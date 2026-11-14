@@ -213,13 +213,14 @@ export class JobQueue {
         this.emit(job.id);
       },
       checkpoint: (state) => {
+        if (controller.signal.aborted) return;
         this.storage.update(job.id, { state, updatedAt: new Date().toISOString() });
       },
     };
     const fresh = this.storage.get(job.id) ?? job;
     handler(fresh, ctx)
       .then((result) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || !this.started) return;
         this.storage.update(job.id, {
           status: 'succeeded',
           progress: 1,
@@ -229,8 +230,8 @@ export class JobQueue {
         });
       })
       .catch((err: unknown) => {
+        if (!this.started) return;
         if (controller.signal.aborted && this.storage.get(job.id)?.status === 'cancelled') return;
-        if (!this.started && controller.signal.aborted) return;
         this.storage.update(job.id, {
           status: 'failed',
           error: err instanceof Error ? err.message : String(err),
@@ -240,6 +241,7 @@ export class JobQueue {
       })
       .finally(() => {
         this.active.delete(job.id);
+        if (!this.started) return;
         this.emit(job.id);
         this.pump();
       });

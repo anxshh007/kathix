@@ -105,8 +105,10 @@ export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime>
   for (const m of modules) for (const step of m.def.agentSteps?.(m.service, ctx) ?? []) ctx.agentSteps.set(step.id, step);
 
   let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  // Jobs start only after the first probe, so resumed work sees the real capabilities.
   const refreshCapabilities = async () => {
     await capabilities.refresh();
+    jobs.start();
   };
   const refreshSoon = () => {
     if (refreshTimer) return;
@@ -120,7 +122,6 @@ export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime>
   });
 
   const app = buildApp(ctx, modules, refreshCapabilities);
-  jobs.start();
   return {
     ctx,
     modules,

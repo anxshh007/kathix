@@ -10,3 +10,4 @@ playwright-report/
 .env.local
 .DS_Store
 assets/backgrounds/masters/*.tmp
+.claude/

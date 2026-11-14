@@ -9,9 +9,9 @@ export const remoteLoad = Annotation.define<boolean>();
 
 const lineDeco = {
   heading: Decoration.line({ class: 'k-heading' }),
-  speaker: Decoration.line({ class: 'k-speaker' }),
   note: Decoration.line({ class: 'k-note' }),
 };
+const speakerMark = Decoration.mark({ class: 'k-speaker' });
 
 /** Styles scene headings, speaker labels and notes; only visible lines are classified. */
 const scriptLines = ViewPlugin.fromClass(
@@ -30,7 +30,8 @@ const scriptLines = ViewPlugin.fromClass(
         while (pos <= to) {
           const line = view.state.doc.lineAt(pos);
           const k = classifyLine(line.text).kind;
-          if (k === 'heading' || k === 'speaker' || k === 'note') b.add(line.from, line.from, lineDeco[k]);
+          if (k === 'heading' || k === 'note') b.add(line.from, line.from, lineDeco[k]);
+          else if (k === 'speaker') b.add(line.from, line.from + line.text.indexOf(':') + 1, speakerMark);
           pos = line.to + 1;
         }
       }

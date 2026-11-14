@@ -1,7 +1,7 @@
 import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 import { classifyLine, renderCanonBlock, scriptStats, splitParagraphs, type AuthorSpan, type EvidenceRef } from '@kathix/kernel/shared';
 import { coach, cowrite, draftFromOutline, runTemplate, verifyEvidence, type CowriteAction, type EvidenceSource, type SourceBlock } from '@kathix/prompts';
-import { TASK_BUDGETS, budget, retrieve } from '@kathix/retrieval';
+import { TASK_BUDGETS, budget, indexScript, retrieve } from '@kathix/retrieval';
 import {
   UserError,
   recordLedger,
@@ -87,8 +87,8 @@ export function createScriptService(ctx: ModuleContext) {
 
     create(projectId: string, title: string, episode: number | null, text = '') {
       if (!store.getProject(projectId)) throw new UserError('That project could not be found.', 404);
-      const script = store.createScript({ projectId, title: title.trim() || 'Untitled', episode });
-      if (text) saveScriptText(ctx, { scriptId: script.id, text, authorship: null, source: 'import', note: 'Started from pasted text' });
+      const script = store.createScript({ projectId, title: title.trim() || 'Untitled', episode, text, source: text ? 'import' : 'edit' });
+      if (text) indexScript(store, script, text);
       recordLedger(ctx, { projectId, scriptId: script.id, kind: 'script.created', module: 'script', summary: `Started “${script.title}”` });
       return script;
     },
@@ -184,6 +184,12 @@ export function createScriptService(ctx: ModuleContext) {
       const suggestions = res.output.suggestions.slice(0, count).map((sg) => {
         let proposed = sg.text;
         if (req.action === 'continue' && from > 0 && !/\s$/.test(text.slice(0, from)) && !/^\s/.test(proposed)) proposed = ` ${proposed}`;
+        if (selection) {
+          // Keep the spacing around the selection so words never run together.
+          const lead = /^\s*/.exec(selection)?.[0] ?? '';
+          const trail = /\s*$/.exec(selection)?.[0] ?? '';
+          proposed = lead + proposed.trim() + trail;
+        }
         const evidence = normaliseEvidence(verifyEvidence(sg.evidence, context.sources));
         const s = store.addSuggestion({
           projectId: project.id,
