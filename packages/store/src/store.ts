@@ -771,6 +771,10 @@ export class Store {
     );
   }
 
+  removeDismissal(projectId: string, fingerprint: string): void {
+    this.db.run('DELETE FROM continuity_dismissals WHERE project_id = ? AND fingerprint = ?', projectId, fingerprint);
+  }
+
   listDismissals(projectId: string): { fingerprint: string; summary: string }[] {
     return this.db
       .all('SELECT fingerprint, summary FROM continuity_dismissals WHERE project_id = ?', projectId)

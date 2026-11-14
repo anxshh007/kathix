@@ -58,6 +58,8 @@ export interface StudioContextValue {
   refreshState(): Promise<void>;
   projects: Project[];
   project: Project | null;
+  /** The open project, or the hidden Scratchpad that standalone modes use. */
+  activeProjectId: string;
   setProjectId(id: string | null): void;
   reloadProjects(): Promise<void>;
   has(cap: Capability): boolean;
@@ -244,6 +246,7 @@ export function StudioProvider({
     refreshState,
     projects,
     project,
+    activeProjectId: project?.id ?? state.scratchProjectId,
     setProjectId,
     reloadProjects,
     has: (c) => state.capabilities[c]?.available === true,

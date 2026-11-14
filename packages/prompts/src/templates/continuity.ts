@@ -15,8 +15,9 @@ export const ISSUE_TYPES = [
 
 const RESERVED = new Set(['name', 'type', 'also called', 'summary', 'source passage']);
 
-function parseCanonBlock(text: string): { name: string; aliases: string[]; attrs: [string, string][] } {
+function parseCanonBlock(text: string): { name: string; type: string; aliases: string[]; attrs: [string, string][] } {
   let name = '';
+  let type = '';
   let aliases: string[] = [];
   const attrs: [string, string][] = [];
   for (const line of text.split('\n')) {
@@ -25,10 +26,11 @@ function parseCanonBlock(text: string): { name: string; aliases: string[]; attrs
     const key = (m[1] as string).trim();
     const value = (m[2] as string).trim();
     if (key.toLowerCase() === 'name') name = value;
+    else if (key.toLowerCase() === 'type') type = value;
     else if (key.toLowerCase() === 'also called') aliases = value.split(',').map((s) => s.trim());
     else if (!RESERVED.has(key.toLowerCase())) attrs.push([key, value]);
   }
-  return { name, aliases, attrs };
+  return { name, type, aliases, attrs };
 }
 
 export interface ContinuityInput {
@@ -78,8 +80,8 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
     if (!b.name) continue;
     const first = b.name.split(/\s+/)[0] as string;
     const mentions = sentences.filter((s) => new RegExp(`\\b${first}\\b`).test(s.text));
-    // Name drift
-    for (const part of b.name.split(/\s+/).filter((p) => p.length >= 5)) {
+    // Name drift (characters only)
+    for (const part of b.type === 'character' ? b.name.split(/\s+/).filter((p) => p.length >= 5) : []) {
       for (const s of sentences) {
         for (const w of s.text.match(/\b[A-Z][a-z]{3,}\b/g) ?? []) {
           if (knownParts.has(w.toLowerCase())) continue;

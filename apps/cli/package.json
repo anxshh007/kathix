@@ -10,6 +10,7 @@
   "dependencies": {
     "@kathix/kernel": "workspace:*",
     "@kathix/runtime": "workspace:*",
-    "commander": "15.1.0"
+    "commander": "15.1.0",
+    "@kathix/platform": "workspace:*"
   }
 }
