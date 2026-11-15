@@ -1,11 +1,11 @@
 const SECRET_PATTERNS = [
-  /sk-[A-Za-z0-9_\-]{8,}/g,
-  /sk-ant-[A-Za-z0-9_\-]{8,}/g,
-  /pt_live_[A-Za-z0-9_\-]{6,}/g,
-  /AIza[0-9A-Za-z_\-]{20,}/g,
+  /sk-[\w-]{8,}/g,
+  /sk-ant-[\w-]{8,}/g,
+  /pt_live_[\w-]{6,}/g,
+  /AIza[\w-]{20,}/g,
   /gsk_[A-Za-z0-9]{10,}/g,
-  /(Bearer\s+)[A-Za-z0-9._\-]{8,}/g,
-  /(x-api-key["']?\s*[:=]\s*["']?)[A-Za-z0-9._\-]{8,}/gi,
+  /(Bearer\s+)[\w.-]{8,}/g,
+  /(x-api-key["']?\s*[:=]\s*["']?)[\w.-]{8,}/gi,
 ];
 
 export function redact(text: string): string {
@@ -36,7 +36,9 @@ export function createLogger(scope: string, minLevel: Level = 'info'): Logger {
       data === undefined
         ? ''
         : ' ' + (data instanceof Error ? data.message : JSON.stringify(data, null, 0));
-    const line = redact(`[${new Date().toISOString()}] ${level.toUpperCase()} ${scope}: ${msg}${extra}`);
+    const line = redact(
+      `[${new Date().toISOString()}] ${level.toUpperCase()} ${scope}: ${msg}${extra}`,
+    );
     if (level === 'error' || level === 'warn') process.stderr.write(line + '\n');
     else process.stdout.write(line + '\n');
   };

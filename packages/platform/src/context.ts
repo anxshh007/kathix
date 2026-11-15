@@ -56,7 +56,12 @@ export interface VoiceApi {
 
 export interface CanonApi {
   /** Imports a structured story bible (no model needed); optionally approves every proposal. */
-  importBible(projectId: string, title: string, text: string, opts: { approve: boolean }): { proposals: number; approved: number };
+  importBible(
+    projectId: string,
+    title: string,
+    text: string,
+    opts: { approve: boolean },
+  ): { proposals: number; approved: number };
 }
 
 export interface VoiceProfilesApi extends VoiceApi {

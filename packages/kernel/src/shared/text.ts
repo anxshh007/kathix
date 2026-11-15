@@ -127,7 +127,13 @@ export function levenshtein(a: string, b: string): number {
     const cur = [i];
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      cur.push(Math.min((prev[j] as number) + 1, (cur[j - 1] as number) + 1, (prev[j - 1] as number) + cost));
+      cur.push(
+        Math.min(
+          (prev[j] as number) + 1,
+          (cur[j - 1] as number) + 1,
+          (prev[j - 1] as number) + cost,
+        ),
+      );
     }
     prev = cur;
   }

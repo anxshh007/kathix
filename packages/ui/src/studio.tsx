@@ -28,7 +28,12 @@ export interface BackgroundSource {
 export interface BackgroundManifest {
   slots: Record<
     string,
-    { placeholder: string; avif: BackgroundSource[]; webp: BackgroundSource[]; kind: 'photo' | 'procedural' }
+    {
+      placeholder: string;
+      avif: BackgroundSource[];
+      webp: BackgroundSource[];
+      kind: 'photo' | 'procedural';
+    }
   >;
 }
 
@@ -90,7 +95,10 @@ export function useStudio(): StudioContextValue {
 }
 
 function readRoute(): Route {
-  return { path: window.location.pathname || '/', query: new URLSearchParams(window.location.search) };
+  return {
+    path: window.location.pathname || '/',
+    query: new URLSearchParams(window.location.search),
+  };
 }
 
 function storageGet(key: string): string | null {
@@ -121,7 +129,9 @@ export function StudioProvider({
 }) {
   const [state, setState] = useState(initialState);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectIdState] = useState<string | null>(() => storageGet('kathix.project'));
+  const [projectId, setProjectIdState] = useState<string | null>(() =>
+    storageGet('kathix.project'),
+  );
   const [route, setRoute] = useState<Route>(readRoute);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [pendingConfirm, setPendingConfirm] = useState<StudioContextValue['pendingConfirm']>(null);
@@ -156,7 +166,7 @@ export function StudioProvider({
   useEffect(() => {
     const source = new EventSource('/api/events');
     const forward = (event: string) => (e: MessageEvent) => {
-      let data: unknown = null;
+      let data: unknown;
       try {
         data = JSON.parse(e.data as string);
       } catch {
@@ -184,7 +194,10 @@ export function StudioProvider({
     window.scrollTo({ top: 0 });
   }, []);
 
-  const dismissToast = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+  const dismissToast = useCallback(
+    (id: number) => setToasts((t) => t.filter((x) => x.id !== id)),
+    [],
+  );
 
   const toast = useCallback(
     (message: string, opts?: { undo?: Toast['undo']; error?: boolean }) => {
@@ -217,7 +230,10 @@ export function StudioProvider({
         return out;
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return undefined;
-        toast(err instanceof ApiError || err instanceof Error ? err.message : 'Something went wrong.', { error: true });
+        toast(
+          err instanceof ApiError || err instanceof Error ? err.message : 'Something went wrong.',
+          { error: true },
+        );
         return undefined;
       }
     },
@@ -239,7 +255,10 @@ export function StudioProvider({
     storageSet('kathix.focus', on ? 'on' : 'off');
   }, []);
 
-  const project = useMemo(() => projects.find((p) => p.id === projectId) ?? null, [projects, projectId]);
+  const project = useMemo(
+    () => projects.find((p) => p.id === projectId) ?? null,
+    [projects, projectId],
+  );
 
   const value: StudioContextValue = {
     state,
@@ -285,7 +304,10 @@ export function useServerEvents(kinds: string[], handler: EventHandler): void {
 }
 
 /** Loads data from the server and reloads when `deps` change. */
-export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | null; error: string | null; reload: () => Promise<void>; loading: boolean } {
+export function useLoad<T>(
+  fn: () => Promise<T>,
+  deps: unknown[],
+): { data: T | null; error: string | null; reload: () => Promise<void>; loading: boolean } {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -304,7 +326,6 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | n
   }, []);
   useEffect(() => {
     void reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return { data, error, reload, loading };
 }

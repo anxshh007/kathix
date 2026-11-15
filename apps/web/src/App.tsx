@@ -10,7 +10,11 @@ function Toasts() {
   return (
     <div className="toasts" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className={`toast ${t.error ? 'error' : ''}`} role={t.error ? 'alert' : 'status'}>
+        <div
+          key={t.id}
+          className={`toast ${t.error ? 'error' : ''}`}
+          role={t.error ? 'alert' : 'status'}
+        >
           <span>{t.message}</span>
           {t.undo && (
             <Button
@@ -23,7 +27,13 @@ function Toasts() {
               Undo
             </Button>
           )}
-          <Button size="small" kind="ghost" className="icon" aria-label="Dismiss message" onClick={() => dismissToast(t.id)}>
+          <Button
+            size="small"
+            kind="ghost"
+            className="icon"
+            aria-label="Dismiss message"
+            onClick={() => dismissToast(t.id)}
+          >
             <Icon name="close" size={14} />
           </Button>
         </div>
@@ -57,7 +67,17 @@ function ConfirmDialog() {
 
 export function App() {
   const studio = useStudio();
-  const { state, hasAll, route, navigate, project, paletteOpen, setPaletteOpen, focusMode, setFocusMode } = studio;
+  const {
+    state,
+    hasAll,
+    route,
+    navigate,
+    project,
+    paletteOpen,
+    setPaletteOpen,
+    focusMode,
+    setFocusMode,
+  } = studio;
   const [choosing, setChoosing] = useState(false);
 
   useEffect(() => {
@@ -99,11 +119,17 @@ export function App() {
     );
   }
 
-  const visible = state.modules.filter((m) => hasAll(m.requires)).sort((a, b) => a.nav.order - b.nav.order);
+  const visible = state.modules
+    .filter((m) => hasAll(m.requires))
+    .sort((a, b) => a.nav.order - b.nav.order);
   const current =
-    [...visible].sort((a, b) => b.nav.path.length - a.nav.path.length).find((m) =>
-      m.nav.path === '/' ? route.path === '/' : route.path === m.nav.path || route.path.startsWith(`${m.nav.path}/`),
-    ) ?? visible[0];
+    [...visible]
+      .sort((a, b) => b.nav.path.length - a.nav.path.length)
+      .find((m) =>
+        m.nav.path === '/'
+          ? route.path === '/'
+          : route.path === m.nav.path || route.path.startsWith(`${m.nav.path}/`),
+      ) ?? visible[0];
   const Page = current ? MODULE_PAGES[current.id] : undefined;
 
   return (
@@ -135,18 +161,28 @@ export function App() {
               {project ? 'Project' : 'No project open'}
               {project && <strong>{project.name}</strong>}
             </div>
-            <button className="nav-item" onClick={() => setPaletteOpen(true)} aria-keyshortcuts="Control+K">
+            <button
+              className="nav-item"
+              onClick={() => setPaletteOpen(true)}
+              aria-keyshortcuts="Control+K"
+            >
               <Icon name="search" />
               Search and commands
             </button>
-            <button className="nav-item" onClick={() => setFocusMode(!focusMode)} aria-pressed={focusMode}>
+            <button
+              className="nav-item"
+              onClick={() => setFocusMode(!focusMode)}
+              aria-pressed={focusMode}
+            >
               <Icon name="focus" />
               {focusMode ? 'Focus mode on' : 'Focus mode'}
             </button>
           </div>
         </nav>
         <main className="main" id="main">
-          <Suspense fallback={<Loading />}>{Page ? <Page key={current?.id} /> : <Loading />}</Suspense>
+          <Suspense fallback={<Loading />}>
+            {Page ? <Page key={current?.id} /> : <Loading />}
+          </Suspense>
         </main>
       </div>
       {paletteOpen && <Palette />}

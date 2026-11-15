@@ -44,7 +44,12 @@ describe('authorship', () => {
   });
 
   it('computes the human share from characters', () => {
-    expect(authorshipShare([{ len: 75, origin: 'human' }, { len: 25, origin: 'ai_edited' }]).humanPercent).toBe(75);
+    expect(
+      authorshipShare([
+        { len: 75, origin: 'human' },
+        { len: 25, origin: 'ai_edited' },
+      ]).humanPercent,
+    ).toBe(75);
     expect(authorshipShare([]).humanPercent).toBe(100);
   });
 });
@@ -66,7 +71,10 @@ describe('text', () => {
   });
 
   it('counts scenes and runtime for scripts', () => {
-    const st = scriptStats('SCENE 1 - A\nMIRELA: Hello there friend.\n[SFX: wind]\nSCENE 2 - B\nNARRATOR: Night falls.', 'podcast');
+    const st = scriptStats(
+      'SCENE 1 - A\nMIRELA: Hello there friend.\n[SFX: wind]\nSCENE 2 - B\nNARRATOR: Night falls.',
+      'podcast',
+    );
     expect(st.scenes).toBe(2);
     expect(st.words).toBeGreaterThan(5);
   });
@@ -162,6 +170,8 @@ describe('secrets and logs', () => {
   });
 
   it('redacts keys from log lines', () => {
-    expect(redact('key sk-ant-abcdefghijklmnop and Bearer abcdefghijkl')).toBe('key [redacted] and Bearer [redacted]');
+    expect(redact('key sk-ant-abcdefghijklmnop and Bearer abcdefghijkl')).toBe(
+      'key [redacted] and Bearer [redacted]',
+    );
   });
 });

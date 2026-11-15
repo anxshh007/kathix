@@ -18,7 +18,7 @@ export interface ScriptScene {
 }
 
 const HEADING_RE = /^\s*(?:INT\.|EXT\.|INT\/EXT\.|SCENE\b|#{1,3}\s)/i;
-const SPEAKER_RE = /^\s*([A-Z][A-Z0-9 .'\-]{1,30}?)(?:\s*\([^)]*\))?:\s*/;
+const SPEAKER_RE = /^\s*([A-Z][A-Z0-9 .'-]{1,30}?)(?:\s*\([^)]*\))?:\s*/;
 const NOTE_RE = /^\s*\[.*\]\s*$/;
 
 export function classifyLine(line: string): { kind: ScriptLineKind; speaker?: string } {

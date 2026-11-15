@@ -20,7 +20,8 @@ export const voiceDescribe: PromptTemplate<VoiceDescribeInput, VoiceDescribeOutp
   temperature: 0.4,
   maxTokens: 800,
   role: "You describe a writer's voice for the writer themself, plainly and kindly.",
-  task: () => 'Write a two to three sentence description of this voice and list up to five short traits.',
+  task: () =>
+    'Write a two to three sentence description of this voice and list up to five short traits.',
   rules: [
     'Base the description on the measured metrics first; use the excerpts only to name qualities the numbers cannot.',
     'Do not quote the excerpts.',
@@ -34,8 +35,14 @@ export const voiceDescribe: PromptTemplate<VoiceDescribeInput, VoiceDescribeOutp
     const long = /average sentence length: (\d+)/i.exec(i.metrics);
     const avg = long ? Number(long[1]) : 15;
     return avg > 18
-      ? { description: 'A patient, flowing voice that builds long sentences and lingers on images.', traits: ['long sentences', 'lyrical', 'reflective'] }
-      : { description: 'A quick, punchy voice that favours short sentences and direct address.', traits: ['short sentences', 'direct', 'energetic'] };
+      ? {
+          description: 'A patient, flowing voice that builds long sentences and lingers on images.',
+          traits: ['long sentences', 'lyrical', 'reflective'],
+        }
+      : {
+          description: 'A quick, punchy voice that favours short sentences and direct address.',
+          traits: ['short sentences', 'direct', 'energetic'],
+        };
   },
 };
 
@@ -57,8 +64,9 @@ export const voiceRewrite: PromptTemplate<VoiceRewriteInput, VoiceRewriteOutput>
   tier: 'balanced',
   temperature: 0.6,
   maxTokens: 3000,
-  role: "You help a writer bring drifting lines back into their own voice. You keep their meaning and their facts.",
-  task: () => 'Rewrite each drifting line so it matches the voice profile. Return one rewrite per line id.',
+  role: 'You help a writer bring drifting lines back into their own voice. You keep their meaning and their facts.',
+  task: () =>
+    'Rewrite each drifting line so it matches the voice profile. Return one rewrite per line id.',
   rules: [
     'Keep each rewrite close in length to what the profile suggests and keep every fact of the original line.',
     'The reasons given for each line are measured differences from the profile; address them.',
@@ -69,15 +77,30 @@ export const voiceRewrite: PromptTemplate<VoiceRewriteInput, VoiceRewriteOutput>
   data: (i) => [
     { id: 'profile', kind: 'voice-profile', text: i.profile },
     { id: 'context', kind: 'surrounding-draft', text: i.context.slice(0, 3000) },
-    ...i.lines.map((l) => ({ id: l.id, kind: 'drifting-line', label: l.reasons.join('; '), text: l.text })),
+    ...i.lines.map((l) => ({
+      id: l.id,
+      kind: 'drifting-line',
+      label: l.reasons.join('; '),
+      text: l.text,
+    })),
   ],
   mock: (i) => ({
     rewrites: i.lines.map((l) => {
       const short = /short sentences|shorter/i.test(l.reasons.join(' '));
       const text = short
-        ? l.text.split(/,\s+|;\s+|\s+and\s+/).map((p) => p.trim().replace(/[.!?]*$/, '.')).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
+        ? l.text
+            .split(/,\s+|;\s+|\s+and\s+/)
+            .map((p) => p.trim().replace(/[.!?]*$/, '.'))
+            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+            .join(' ')
         : l.text.replace(/\.\s+(\w)/g, (_m, c: string) => `, and ${c.toLowerCase()}`);
-      return { lineId: l.id, text, reason: short ? 'Breaks the line into the short beats this voice uses.' : 'Joins the beats into the longer flow this voice uses.' };
+      return {
+        lineId: l.id,
+        text,
+        reason: short
+          ? 'Breaks the line into the short beats this voice uses.'
+          : 'Joins the beats into the longer flow this voice uses.',
+      };
     }),
   }),
 };

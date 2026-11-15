@@ -2,13 +2,7 @@ export type Tier = 'fast' | 'balanced' | 'deep';
 export type Priority = 'interactive' | 'background';
 
 export type ProviderKind =
-  | 'anthropic'
-  | 'openai'
-  | 'gemini'
-  | 'openai-compatible'
-  | 'ollama'
-  | 'adaption'
-  | 'mock';
+  'anthropic' | 'openai' | 'gemini' | 'openai-compatible' | 'ollama' | 'adaption' | 'mock';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';

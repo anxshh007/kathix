@@ -20,16 +20,25 @@ interface ProviderRow {
 export function ConnectScreen({ onConnected }: { onConnected: () => void }) {
   const { refreshState, attempt, toast } = useStudio();
   const kinds = useLoad(() => api.get<{ kinds: KindInfo[] }>('/api/m/router/kinds'), []);
-  const providers = useLoad(() => api.get<{ providers: ProviderRow[] }>('/api/m/router/providers'), []);
+  const providers = useLoad(
+    () => api.get<{ providers: ProviderRow[] }>('/api/m/router/providers'),
+    [],
+  );
   const [kind, setKind] = useState('anthropic');
   const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const info = kinds.data?.kinds.find((k) => k.kind === kind);
-  const failing = providers.data?.providers.filter((p) => p.status === 'error' && p.config.kind !== 'ollama') ?? [];
+  const failing =
+    providers.data?.providers.filter((p) => p.status === 'error' && p.config.kind !== 'ollama') ??
+    [];
 
   const connect = async () => {
     const res = await attempt(() =>
-      api.post<{ ok: boolean; message: string }>('/api/m/router/providers', { kind, apiKey, baseUrl: baseUrl || undefined }),
+      api.post<{ ok: boolean; message: string }>('/api/m/router/providers', {
+        kind,
+        apiKey,
+        baseUrl: baseUrl || undefined,
+      }),
     );
     if (!res) return;
     if (!res.ok) {
@@ -54,8 +63,8 @@ export function ConnectScreen({ onConnected }: { onConnected: () => void }) {
           </div>
           <h1 id="setup-title">Connect a writing model</h1>
           <p className="muted">
-            Kathix keeps your stories on this computer. It only sends the passages you work on to the model you connect
-            here. Your key is stored encrypted on this machine.
+            Kathix keeps your stories on this computer. It only sends the passages you work on to
+            the model you connect here. Your key is stored encrypted on this machine.
           </p>
           {failing.map((p) => (
             <p key={p.config.id} className="small" role="alert">
@@ -73,7 +82,12 @@ export function ConnectScreen({ onConnected }: { onConnected: () => void }) {
           </Field>
           {info?.needsBaseUrl && (
             <Field label="Address" hint="For example https://api.groq.com/openai/v1">
-              <input className="input" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://" />
+              <input
+                className="input"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder="https://"
+              />
             </Field>
           )}
           {(info?.needsKey || info?.needsBaseUrl) && (
@@ -89,7 +103,9 @@ export function ConnectScreen({ onConnected }: { onConnected: () => void }) {
             </Field>
           )}
           {info?.kind === 'ollama' && (
-            <p className="small muted">Kathix will look for Ollama on this computer at its usual address.</p>
+            <p className="small muted">
+              Kathix will look for Ollama on this computer at its usual address.
+            </p>
           )}
           <ActionButton
             kind="primary"
@@ -119,7 +135,9 @@ export function ChooseScreen({ onDone }: { onDone: () => void }) {
     onDone();
   };
   const create = async () => {
-    const res = await attempt(() => api.post<{ project: Project }>('/api/m/home/projects', { name: name.trim(), type }));
+    const res = await attempt(() =>
+      api.post<{ project: Project }>('/api/m/home/projects', { name: name.trim(), type }),
+    );
     if (!res) return;
     await reloadProjects();
     setProjectId(res.project.id);
@@ -135,14 +153,25 @@ export function ChooseScreen({ onDone }: { onDone: () => void }) {
           <ActionButton kind="primary" busyLabel="Opening the sample" onAction={openSample}>
             Open the sample project
           </ActionButton>
-          <p className="muted small">An original three-episode audio drama with its story bible, ready to explore.</p>
+          <p className="muted small">
+            An original three-episode audio drama with its story bible, ready to explore.
+          </p>
           <hr style={{ border: 0, borderTop: '1px solid var(--line)', width: '100%' }} />
           <h2>Start my own</h2>
           <Field label="Project name">
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="My series" />
+            <input
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="My series"
+            />
           </Field>
           <Field label="What are you making?">
-            <select className="select" value={type} onChange={(e) => setType(e.target.value as ProjectType)}>
+            <select
+              className="select"
+              value={type}
+              onChange={(e) => setType(e.target.value as ProjectType)}
+            >
               {Object.entries(PROJECT_TYPES).map(([k, v]) => (
                 <option key={k} value={k}>
                   {v.label}

@@ -19,14 +19,26 @@ const serverModule: ServerModule<CanonService> = {
         z.object({
           projectId: z.string().nullable().optional(),
           title: z.string().max(200).default(''),
-          file: z.object({ name: z.string(), text: z.string().optional(), base64: z.string().optional() }),
+          file: z.object({
+            name: z.string(),
+            text: z.string().optional(),
+            base64: z.string().optional(),
+          }),
         }),
       );
       return c.json(await s.importText(pid(input.projectId ?? undefined), input.title, input.file));
     });
     app.get('/proposals', (c) => c.json({ proposals: s.proposals(pid(c.req.query('projectId'))) }));
     app.post('/proposals/:id/approve', async (c) => {
-      const edits = await body(c, z.object({ name: z.string().min(1).optional(), summary: z.string().optional(), type: canonType.optional(), attributes: attrs.optional() }));
+      const edits = await body(
+        c,
+        z.object({
+          name: z.string().min(1).optional(),
+          summary: z.string().optional(),
+          type: canonType.optional(),
+          attributes: attrs.optional(),
+        }),
+      );
       return c.json({ entry: s.approve(c.req.param('id'), edits) });
     });
     app.post('/proposals/:id/merge', async (c) => {
@@ -36,12 +48,24 @@ const serverModule: ServerModule<CanonService> = {
     app.post('/proposals/:id/reject', (c) => c.json(s.reject(c.req.param('id'))));
     app.post('/proposals/:id/restore', (c) => c.json(s.restoreProposal(c.req.param('id'))));
     app.post('/proposals/bulk-approve', async (c) => {
-      const { projectId, type } = await body(c, z.object({ projectId: z.string().nullable().optional(), type: canonType }));
+      const { projectId, type } = await body(
+        c,
+        z.object({ projectId: z.string().nullable().optional(), type: canonType }),
+      );
       return c.json(s.bulkApprove(pid(projectId ?? undefined), type));
     });
     app.get('/entries', (c) => c.json({ entries: s.entries(pid(c.req.query('projectId'))) }));
     app.post('/entries', async (c) => {
-      const input = await body(c, z.object({ projectId: z.string().nullable().optional(), type: canonType, name: z.string().min(1).max(200), summary: z.string().default(''), attributes: attrs.default({}) }));
+      const input = await body(
+        c,
+        z.object({
+          projectId: z.string().nullable().optional(),
+          type: canonType,
+          name: z.string().min(1).max(200),
+          summary: z.string().default(''),
+          attributes: attrs.default({}),
+        }),
+      );
       return c.json({ entry: s.createEntry(pid(input.projectId ?? undefined), input) });
     });
     app.get('/entries/:id', (c) => c.json(s.entryDetail(c.req.param('id'))));
@@ -67,8 +91,18 @@ const serverModule: ServerModule<CanonService> = {
       return c.json({ ok: true });
     });
     app.post('/links', async (c) => {
-      const l = await body(c, z.object({ projectId: z.string().nullable().optional(), fromId: z.string(), toId: z.string(), relation: z.string().max(80) }));
-      return c.json({ link: s.addLink(pid(l.projectId ?? undefined), l.fromId, l.toId, l.relation) });
+      const l = await body(
+        c,
+        z.object({
+          projectId: z.string().nullable().optional(),
+          fromId: z.string(),
+          toId: z.string(),
+          relation: z.string().max(80),
+        }),
+      );
+      return c.json({
+        link: s.addLink(pid(l.projectId ?? undefined), l.fromId, l.toId, l.relation),
+      });
     });
     app.delete('/links/:id', (c) => {
       s.removeLink(c.req.param('id'));
@@ -79,7 +113,9 @@ const serverModule: ServerModule<CanonService> = {
     app.get('/promises', (c) => c.json({ promises: s.promises(pid(c.req.query('projectId'))) }));
     app.get('/export.md', (c) => {
       c.header('content-disposition', 'attachment; filename="story-bible.md"');
-      return c.body(s.exportMarkdown(pid(c.req.query('projectId'))), 200, { 'content-type': 'text/markdown; charset=utf-8' });
+      return c.body(s.exportMarkdown(pid(c.req.query('projectId'))), 200, {
+        'content-type': 'text/markdown; charset=utf-8',
+      });
     });
     app.get('/export.json', (c) => {
       c.header('content-disposition', 'attachment; filename="story-bible.json"');

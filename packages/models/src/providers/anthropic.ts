@@ -70,9 +70,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       if (final.stop_reason === 'refusal') {
         throw new ProviderError('The model declined this request', this.id, false);
       }
-      const text = final.content
-        .map((b) => (b.type === 'text' ? b.text : ''))
-        .join('');
+      const text = final.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
       return {
         text,
         inputTokens: final.usage.input_tokens,

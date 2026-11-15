@@ -2,7 +2,13 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SecretStore, createLogger } from '@kathix/kernel';
 import { Store } from '@kathix/store';
-import { MockAdapter, ModelRouter, RateBudget, extractJson, pickTierModels } from '../src/index';
+import {
+  ModelRouter,
+  RateBudget,
+  extractJson,
+  pickTierModels,
+  type MockAdapter,
+} from '../src/index';
 import { tempDir } from '../../../tests/helpers';
 
 function router() {
@@ -39,7 +45,11 @@ describe('model router', () => {
       { id: 'acme-standard-2', label: '', kind: 'chat' },
       { id: 'acme-embed', label: '', kind: 'embedding' },
     ]);
-    expect(picked).toEqual({ fast: 'acme-mini-2', balanced: 'acme-standard-2', deep: 'acme-large-2' });
+    expect(picked).toEqual({
+      fast: 'acme-mini-2',
+      balanced: 'acme-standard-2',
+      deep: 'acme-large-2',
+    });
   });
 
   it('streams, records usage and caches by prompt hash', async () => {
@@ -60,7 +70,10 @@ describe('model router', () => {
     const { r } = router();
     const backup = r.addProvider({ kind: 'mock', label: 'Backup' });
     await r.refreshAll();
-    r.setTier('fast', [{ providerId: 'mock', model: 'mock-small' }, { providerId: backup, model: 'mock-small' }]);
+    r.setTier('fast', [
+      { providerId: 'mock', model: 'mock-small' },
+      { providerId: backup, model: 'mock-small' },
+    ]);
     (r.adapter('mock') as MockAdapter).failWith = 'service unavailable';
     const res = await r.generate(opts({ cache: false }));
     expect(res.providerId).toBe(backup);
@@ -71,10 +84,15 @@ describe('model router', () => {
     const { r } = router();
     const backup = r.addProvider({ kind: 'mock', label: 'Backup' });
     await r.refreshAll();
-    r.setTier('fast', [{ providerId: 'mock', model: 'mock-small' }, { providerId: backup, model: 'mock-small' }]);
+    r.setTier('fast', [
+      { providerId: 'mock', model: 'mock-small' },
+      { providerId: backup, model: 'mock-small' },
+    ]);
     (r.adapter('mock') as MockAdapter).latencyMs = 600;
     let resets = 0;
-    const pending = r.generate(opts({ cache: false, mockInput: 'x'.repeat(400), onReset: () => resets++ }));
+    const pending = r.generate(
+      opts({ cache: false, mockInput: 'x'.repeat(400), onReset: () => resets++ }),
+    );
     await new Promise((res) => setTimeout(res, 150));
     r.setEnabled('mock', false);
     const res = await pending;
@@ -86,7 +104,9 @@ describe('model router', () => {
     const { r } = router();
     await r.refreshAll();
     r.setEnabled('mock', false);
-    await expect(r.generate(opts({ cache: false }))).rejects.toThrow(/No writing model is connected/);
+    await expect(r.generate(opts({ cache: false }))).rejects.toThrow(
+      /No writing model is connected/,
+    );
   });
 
   it('queues interactive work ahead of background work in the rate budget', async () => {

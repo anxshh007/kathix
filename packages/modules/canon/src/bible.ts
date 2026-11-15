@@ -46,10 +46,16 @@ export function parseBible(text: string): BibleEntry[] {
   const marks: { index: number; type: string; name: string; headLen: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = heading.exec(text))) {
-    marks.push({ index: m.index, type: (m[1] as string).trim().toLowerCase(), name: (m[2] as string).trim(), headLen: m[0].length });
+    marks.push({
+      index: m.index,
+      type: (m[1] as string).trim().toLowerCase(),
+      name: (m[2] as string).trim(),
+      headLen: m[0].length,
+    });
   }
   marks.forEach((mark, i) => {
-    const type = TYPE_WORDS[mark.type] ?? (CANON_TYPES as readonly string[]).find((t) => t === mark.type);
+    const type =
+      TYPE_WORDS[mark.type] ?? (CANON_TYPES as readonly string[]).find((t) => t === mark.type);
     if (!type) return;
     const end = i + 1 < marks.length ? (marks[i + 1] as { index: number }).index : text.length;
     const bodyStart = mark.index + mark.headLen;
@@ -75,7 +81,11 @@ export function parseBible(text: string): BibleEntry[] {
       const kv = /^(?:[-*]\s*)?([A-Za-z][A-Za-z ]{0,30}):\s*(.+)$/.exec(line);
       const key = kv?.[1]?.trim().toLowerCase();
       const value = kv?.[2]?.trim() ?? '';
-      if (kv && key === 'aliases') entry.aliases = value.split(',').map((s) => s.trim()).filter(Boolean);
+      if (kv && key === 'aliases')
+        entry.aliases = value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
       else if (kv && key === 'related') {
         entry.related = value
           .split(';')
@@ -87,7 +97,8 @@ export function parseBible(text: string): BibleEntry[] {
         entry.timelineLabel = label ?? '';
         entry.timelineOrder = order && !Number.isNaN(Number(order)) ? Number(order) : null;
       } else if (kv && key === 'planted') entry.plantedIn = value;
-      else if (kv && raw.trimStart().match(/^[-*]/)) entry.attributes[(kv[1] as string).trim()] = value;
+      else if (kv && raw.trimStart().match(/^[-*]/))
+        entry.attributes[(kv[1] as string).trim()] = value;
       else summary.push(line);
     }
     entry.summary = summary.join(' ');

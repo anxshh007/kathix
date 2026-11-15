@@ -59,7 +59,9 @@ async function main() {
     frontend = (req, res) => vite.middlewares(req, res);
   } else {
     if (!existsSync(path.join(distDir, 'index.html'))) {
-      console.error('The Studio has not been built yet. Run `pnpm start` from the repository root.');
+      console.error(
+        'The Studio has not been built yet. Run `pnpm start` from the repository root.',
+      );
       process.exit(1);
     }
     frontend = serveStatic;
@@ -70,7 +72,9 @@ async function main() {
     else frontend(req, res);
   });
   server.listen(port, host, () => {
-    console.log(`Kathix Studio is running at http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
+    console.log(
+      `Kathix Studio is running at http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`,
+    );
   });
   void runtime.refreshCapabilities();
 

@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { extractJson, type ChatMessage, type ModelRouter, type Priority, type Tier, type TierTarget } from '@kathix/models';
+import {
+  extractJson,
+  type ChatMessage,
+  type ModelRouter,
+  type Priority,
+  type Tier,
+  type TierTarget,
+} from '@kathix/models';
 
 export interface DataBlock {
   id: string;
@@ -159,7 +166,13 @@ export async function runTemplate<I, O>(
     try {
       const parsed = t.schema.safeParse(JSON.parse(extractJson(text)));
       if (parsed.success) return { ok: true, value: parsed.data };
-      return { ok: false, error: parsed.error.issues.slice(0, 5).map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') };
+      return {
+        ok: false,
+        error: parsed.error.issues
+          .slice(0, 5)
+          .map((i) => `${i.path.join('.')}: ${i.message}`)
+          .join('; '),
+      };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : 'Not valid JSON' };
     }
@@ -170,7 +183,15 @@ export async function runTemplate<I, O>(
   tokensIn += first.inputTokens;
   tokensOut += first.outputTokens;
   let parsed = tryParse(first.text);
-  if (parsed.ok) return { output: parsed.value, providerId: first.providerId, model: first.model, inputTokens: tokensIn, outputTokens: tokensOut, cached: first.cached };
+  if (parsed.ok)
+    return {
+      output: parsed.value,
+      providerId: first.providerId,
+      model: first.model,
+      inputTokens: tokensIn,
+      outputTokens: tokensOut,
+      cached: first.cached,
+    };
 
   acc = '';
   opts.onReset?.();
@@ -181,22 +202,47 @@ export async function runTemplate<I, O>(
     messages: [
       ...messages,
       { role: 'assistant', content: first.text.slice(0, 8000) },
-      { role: 'user', content: `That answer did not match the schema (${parsed.error}). Return the corrected JSON object only.` },
+      {
+        role: 'user',
+        content: `That answer did not match the schema (${parsed.error}). Return the corrected JSON object only.`,
+      },
     ],
   });
   tokensIn += retry.inputTokens;
   tokensOut += retry.outputTokens;
   parsed = tryParse(retry.text);
-  if (parsed.ok) return { output: parsed.value, providerId: retry.providerId, model: retry.model, inputTokens: tokensIn, outputTokens: tokensOut, cached: false };
+  if (parsed.ok)
+    return {
+      output: parsed.value,
+      providerId: retry.providerId,
+      model: retry.model,
+      inputTokens: tokensIn,
+      outputTokens: tokensOut,
+      cached: false,
+    };
 
   acc = '';
   opts.onReset?.();
   try {
-    const other = await router.generate({ ...base, messages, cache: false, target: undefined, excludeProviders: [first.providerId] });
+    const other = await router.generate({
+      ...base,
+      messages,
+      cache: false,
+      target: undefined,
+      excludeProviders: [first.providerId],
+    });
     tokensIn += other.inputTokens;
     tokensOut += other.outputTokens;
     parsed = tryParse(other.text);
-    if (parsed.ok) return { output: parsed.value, providerId: other.providerId, model: other.model, inputTokens: tokensIn, outputTokens: tokensOut, cached: false };
+    if (parsed.ok)
+      return {
+        output: parsed.value,
+        providerId: other.providerId,
+        model: other.model,
+        inputTokens: tokensIn,
+        outputTokens: tokensOut,
+        cached: false,
+      };
   } catch {
     // No other provider available; fall through to the plain error.
   }

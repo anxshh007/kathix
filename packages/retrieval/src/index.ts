@@ -1,4 +1,9 @@
-import { estimateTokens, parseScript, renderCanonBlock, splitParagraphs } from '@kathix/kernel/shared';
+import {
+  estimateTokens,
+  parseScript,
+  renderCanonBlock,
+  splitParagraphs,
+} from '@kathix/kernel/shared';
 import type { ModelRouter } from '@kathix/models';
 import type { CanonEntry, CanonLink, Chunk, Script, Store } from '@kathix/store';
 
@@ -18,8 +23,15 @@ export function chunkScript(text: string, title: string, ordinal: number): Chunk
   const pieces: { start: number; end: number; label: string }[] = [];
   if (scenes.length) {
     const first = scenes[0] as { start: number };
-    if (first.start > 0 && text.slice(0, first.start).trim()) pieces.push({ start: 0, end: first.start, label: `${title} · opening` });
-    scenes.forEach((s, i) => pieces.push({ start: s.start, end: s.end, label: `${title} · ${s.title || `scene ${i + 1}`}` }));
+    if (first.start > 0 && text.slice(0, first.start).trim())
+      pieces.push({ start: 0, end: first.start, label: `${title} · opening` });
+    scenes.forEach((s, i) =>
+      pieces.push({
+        start: s.start,
+        end: s.end,
+        label: `${title} · ${s.title || `scene ${i + 1}`}`,
+      }),
+    );
   } else {
     let cur: { start: number; end: number } | null = null;
     for (const p of splitParagraphs(text)) {
@@ -45,7 +57,12 @@ export function chunkScript(text: string, title: string, ordinal: number): Chunk
 }
 
 export function indexScript(store: Store, script: Script, text: string): Chunk[] {
-  return store.replaceChunks(script.projectId, 'script', script.id, chunkScript(text, script.title, script.episode ?? 0));
+  return store.replaceChunks(
+    script.projectId,
+    'script',
+    script.id,
+    chunkScript(text, script.title, script.episode ?? 0),
+  );
 }
 
 export function canonText(entry: CanonEntry): string {
@@ -60,12 +77,20 @@ export function indexEntry(store: Store, entry: CanonEntry): Chunk[] {
 }
 
 /** Adds embeddings to chunks that lack them, when an embedding model is available. */
-export async function embedMissing(store: Store, router: ModelRouter, projectId: string, signal?: AbortSignal): Promise<number> {
+export async function embedMissing(
+  store: Store,
+  router: ModelRouter,
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<number> {
   const missing = store.listChunks(projectId).filter((c) => !c.embedding);
   let done = 0;
   for (let i = 0; i < missing.length; i += 32) {
     const batch = missing.slice(i, i + 32);
-    const res = await router.embed(batch.map((c) => c.text), signal);
+    const res = await router.embed(
+      batch.map((c) => c.text),
+      signal,
+    );
     if (!res) return done;
     batch.forEach((c, n) => {
       const v = res.vectors[n];
@@ -142,7 +167,11 @@ export async function retrieve(store: Store, opts: RetrieveOptions): Promise<Ret
   const lowerQuery = opts.query.toLowerCase();
   const present = new Set(
     entries
-      .filter((e) => [e.name, ...e.aliases].some((n) => n.length > 2 && lowerQuery.includes(n.toLowerCase().split(' ')[0] as string)))
+      .filter((e) =>
+        [e.name, ...e.aliases].some(
+          (n) => n.length > 2 && lowerQuery.includes(n.toLowerCase().split(' ')[0] as string),
+        ),
+      )
       .map((e) => e.id),
   );
   const linked = new Set<string>();
@@ -150,12 +179,17 @@ export async function retrieve(store: Store, opts: RetrieveOptions): Promise<Ret
     if (present.has(l.fromId)) linked.add(l.toId);
     if (present.has(l.toId)) linked.add(l.fromId);
   }
-  const maxOrdinal = Math.max(1, ...all.filter((c) => c.sourceKind === 'script').map((c) => c.ordinal));
+  const maxOrdinal = Math.max(
+    1,
+    ...all.filter((c) => c.sourceKind === 'script').map((c) => c.ordinal),
+  );
   for (const c of all) {
     if (c.sourceKind === 'canon' && (present.has(c.sourceId) || linked.has(c.sourceId))) {
       const cur = scored.get(c.id) ?? { ...c, score: 0, why: [] };
       cur.score += present.has(c.sourceId) ? 1.2 : 0.5;
-      cur.why.push(present.has(c.sourceId) ? 'named in this passage' : 'linked to someone in this passage');
+      cur.why.push(
+        present.has(c.sourceId) ? 'named in this passage' : 'linked to someone in this passage',
+      );
       scored.set(c.id, cur);
     }
   }

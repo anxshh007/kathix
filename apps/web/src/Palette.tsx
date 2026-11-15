@@ -18,7 +18,17 @@ interface SearchHit {
 
 /** Global command palette (Ctrl/Cmd+K): every available action, plus search across scripts and canon. */
 export function Palette() {
-  const { state, hasAll, project, projects, setProjectId, navigate, setPaletteOpen, focusMode, setFocusMode } = useStudio();
+  const {
+    state,
+    hasAll,
+    project,
+    projects,
+    setProjectId,
+    navigate,
+    setPaletteOpen,
+    focusMode,
+    setFocusMode,
+  } = useStudio();
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [active, setActive] = useState(0);
@@ -35,7 +45,9 @@ export function Palette() {
     const ctrl = new AbortController();
     const t = setTimeout(() => {
       api
-        .get<{ hits: SearchHit[] }>(`/api/m/home/search?q=${encodeURIComponent(q)}${project ? `&projectId=${project.id}` : ''}`)
+        .get<{ hits: SearchHit[] }>(
+          `/api/m/home/search?q=${encodeURIComponent(q)}${project ? `&projectId=${project.id}` : ''}`,
+        )
         .then((r) => !ctrl.signal.aborted && setHits(r.hits))
         .catch(() => setHits([]));
     }, 160);
@@ -49,7 +61,12 @@ export function Palette() {
     const out: Item[] = [];
     for (const m of state.modules) {
       if (!hasAll(m.requires)) continue;
-      out.push({ id: `nav-${m.id}`, label: `Go to ${m.nav.label}`, hint: 'Open', run: () => navigate(m.nav.path) });
+      out.push({
+        id: `nav-${m.id}`,
+        label: `Go to ${m.nav.label}`,
+        hint: 'Open',
+        run: () => navigate(m.nav.path),
+      });
       for (const a of m.actions) {
         if (!hasAll(a.requires) || (a.needsProject && !project)) continue;
         out.push({ id: a.id, label: a.label, hint: m.nav.label, run: () => navigate(a.path) });
@@ -57,17 +74,46 @@ export function Palette() {
     }
     for (const p of projects) {
       if (p.id !== project?.id) {
-        out.push({ id: `p-${p.id}`, label: `Open project: ${p.name}`, hint: 'Project', run: () => { setProjectId(p.id); navigate('/'); } });
+        out.push({
+          id: `p-${p.id}`,
+          label: `Open project: ${p.name}`,
+          hint: 'Project',
+          run: () => {
+            setProjectId(p.id);
+            navigate('/');
+          },
+        });
       }
     }
-    out.push({ id: 'focus', label: focusMode ? 'Turn off focus mode' : 'Turn on focus mode', hint: 'View', run: () => setFocusMode(!focusMode) });
+    out.push({
+      id: 'focus',
+      label: focusMode ? 'Turn off focus mode' : 'Turn on focus mode',
+      hint: 'View',
+      run: () => setFocusMode(!focusMode),
+    });
     const needle = q.trim().toLowerCase();
     const filtered = needle ? out.filter((i) => i.label.toLowerCase().includes(needle)) : out;
     return [
       ...filtered,
-      ...hits.map((h) => ({ id: `hit-${h.kind}-${h.id}`, label: h.title, hint: h.kind === 'script' ? 'Script' : 'Canon', run: () => navigate(h.path) })),
+      ...hits.map((h) => ({
+        id: `hit-${h.kind}-${h.id}`,
+        label: h.title,
+        hint: h.kind === 'script' ? 'Script' : 'Canon',
+        run: () => navigate(h.path),
+      })),
     ];
-  }, [state.modules, hasAll, project, projects, q, hits, navigate, setProjectId, focusMode, setFocusMode]);
+  }, [
+    state.modules,
+    hasAll,
+    project,
+    projects,
+    q,
+    hits,
+    navigate,
+    setProjectId,
+    focusMode,
+    setFocusMode,
+  ]);
 
   useEffect(() => setActive(0), [q]);
 
@@ -114,7 +160,11 @@ export function Palette() {
               </button>
             </li>
           ))}
-          {!items.length && <li className="muted small" style={{ padding: 12 }}>Nothing matches “{q}”.</li>}
+          {!items.length && (
+            <li className="muted small" style={{ padding: 12 }}>
+              Nothing matches “{q}”.
+            </li>
+          )}
         </ul>
       </div>
     </div>

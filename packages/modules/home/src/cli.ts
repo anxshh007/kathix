@@ -4,7 +4,9 @@ import { createHomeService } from './service';
 
 const cli: CliModule = {
   register(program, getContext) {
-    const cmd = program.command('home').description('List and create projects, and see the next best action');
+    const cmd = program
+      .command('home')
+      .description('List and create projects, and see the next best action');
     cmd
       .command('projects')
       .description('List projects')
@@ -12,8 +14,10 @@ const cli: CliModule = {
       .action(async (o: { archived?: boolean }) => {
         const s = createHomeService(await getContext());
         const list = s.listProjects(Boolean(o.archived));
-        if (!list.length) console.log('No projects yet. Create one with `kathix home create "My series"`.');
-        for (const p of list) console.log(`${p.id}  ${p.name}  (${p.type}${p.archived ? ', archived' : ''})`);
+        if (!list.length)
+          console.log('No projects yet. Create one with `kathix home create "My series"`.');
+        for (const p of list)
+          console.log(`${p.id}  ${p.name}  (${p.type}${p.archived ? ', archived' : ''})`);
       });
     cmd
       .command('create <name>')
@@ -34,7 +38,8 @@ const cli: CliModule = {
       .command('search <query>')
       .description('Search scripts and canon across projects')
       .action(async (q: string) => {
-        for (const h of createHomeService(await getContext()).search(q)) console.log(`[${h.kind}] ${h.title}: ${h.snippet}`);
+        for (const h of createHomeService(await getContext()).search(q))
+          console.log(`[${h.kind}] ${h.title}: ${h.snippet}`);
       });
     program
       .command('seed')

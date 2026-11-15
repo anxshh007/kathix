@@ -21,7 +21,16 @@ const H = 2160;
 const WIDTHS = [1920, 2560, 3840];
 const AVIF_1920_BUDGET = 400 * 1024;
 
-export const SLOTS = ['home', 'canon', 'continuity', 'voice', 'forge', 'showrunner', 'ledger', 'router'] as const;
+export const SLOTS = [
+  'home',
+  'canon',
+  'continuity',
+  'voice',
+  'forge',
+  'showrunner',
+  'ledger',
+  'router',
+] as const;
 type Slot = (typeof SLOTS)[number];
 
 function seeded(seed: number) {
@@ -60,7 +69,8 @@ const PROCEDURAL: Record<Slot, () => string> = {
       bokeh += `<circle cx="${Math.round(r() * W)}" cy="${Math.round(r() * H)}" r="${Math.round(60 + r() * 220)}" fill="${warm ? '#f2a650' : '#6fc8db'}" opacity="${(0.05 + r() * 0.16).toFixed(2)}"/>`;
     }
     let grille = '';
-    for (let y = 760; y < 1360; y += 34) grille += `<line x1="1700" y1="${y}" x2="2140" y2="${y}" stroke="#0d0e12" stroke-width="10"/>`;
+    for (let y = 760; y < 1360; y += 34)
+      grille += `<line x1="1700" y1="${y}" x2="2140" y2="${y}" stroke="#0d0e12" stroke-width="10"/>`;
     return svg(
       `<g filter="url(#soft)">${bokeh}</g>
        <rect x="1680" y="640" width="480" height="820" rx="240" fill="url(#metal)"/>${grille}
@@ -74,7 +84,8 @@ const PROCEDURAL: Record<Slot, () => string> = {
     for (let x = 520; x <= 3320; x += 120) {
       bulbs += `<circle cx="${x}" cy="520" r="26" fill="#ffd28a"/><circle cx="${x}" cy="1340" r="26" fill="#ffd28a"/>`;
     }
-    for (let y = 640; y <= 1220; y += 120) bulbs += `<circle cx="520" cy="${y}" r="26" fill="#ffd28a"/><circle cx="3320" cy="${y}" r="26" fill="#ffd28a"/>`;
+    for (let y = 640; y <= 1220; y += 120)
+      bulbs += `<circle cx="520" cy="${y}" r="26" fill="#ffd28a"/><circle cx="3320" cy="${y}" r="26" fill="#ffd28a"/>`;
     return svg(
       `<rect width="${W}" height="${H}" fill="url(#glow)"/><rect x="440" y="440" width="2960" height="980" rx="40" fill="#170f09" stroke="#3b2414" stroke-width="20"/>
        <g filter="url(#bloom)">${bulbs}</g>${bulbs}
@@ -95,18 +106,28 @@ const PROCEDURAL: Record<Slot, () => string> = {
     ),
   ledger: () => {
     let lines = '';
-    for (let y = 260; y < H; y += 90) lines += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#2c3340" stroke-width="3"/>`;
-    return svg(`${lines}<line x1="520" y1="0" x2="520" y2="${H}" stroke="#6b2f2a" stroke-width="5"/><rect width="${W}" height="${H}" fill="url(#ink)"/>`, `<radialGradient id="ink" cx="0.75" cy="0.3" r="0.6"><stop offset="0" stop-color="#6fc8db" stop-opacity="0.18"/><stop offset="1" stop-color="#0b0c10" stop-opacity="0"/></radialGradient>`);
+    for (let y = 260; y < H; y += 90)
+      lines += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#2c3340" stroke-width="3"/>`;
+    return svg(
+      `${lines}<line x1="520" y1="0" x2="520" y2="${H}" stroke="#6b2f2a" stroke-width="5"/><rect width="${W}" height="${H}" fill="url(#ink)"/>`,
+      `<radialGradient id="ink" cx="0.75" cy="0.3" r="0.6"><stop offset="0" stop-color="#6fc8db" stop-opacity="0.18"/><stop offset="1" stop-color="#0b0c10" stop-opacity="0"/></radialGradient>`,
+    );
   },
   router: () => {
     const r = seeded(5);
-    const pts = Array.from({ length: 34 }, () => [Math.round(r() * W), Math.round(r() * H)] as const);
+    const pts = Array.from(
+      { length: 34 },
+      () => [Math.round(r() * W), Math.round(r() * H)] as const,
+    );
     let g = '';
     pts.forEach(([x, y], i) => {
       const [nx, ny] = pts[(i * 7 + 3) % pts.length] as readonly [number, number];
       g += `<line x1="${x}" y1="${y}" x2="${nx}" y2="${ny}" stroke="#6fc8db" stroke-opacity="0.18" stroke-width="4"/>`;
     });
-    pts.forEach(([x, y], i) => (g += `<circle cx="${x}" cy="${y}" r="${i % 5 === 0 ? 22 : 12}" fill="${i % 5 === 0 ? '#f2a650' : '#6fc8db'}" opacity="0.6"/>`));
+    pts.forEach(
+      ([x, y], i) =>
+        (g += `<circle cx="${x}" cy="${y}" r="${i % 5 === 0 ? 22 : 12}" fill="${i % 5 === 0 ? '#f2a650' : '#6fc8db'}" opacity="0.6"/>`),
+    );
     return svg(g);
   },
 };
@@ -114,12 +135,22 @@ const PROCEDURAL: Record<Slot, () => string> = {
 async function makeMaster(slot: Slot): Promise<{ kind: 'photo' | 'procedural'; file: string }> {
   mkdirSync(mastersDir, { recursive: true });
   const master = path.join(mastersDir, `${slot}.jpg`);
-  const credits = existsSync(path.join(sourcesDir, 'credits.json')) ? (JSON.parse(readFileSync(path.join(sourcesDir, 'credits.json'), 'utf8')) as Record<string, unknown>) : {};
+  const credits = existsSync(path.join(sourcesDir, 'credits.json'))
+    ? (JSON.parse(readFileSync(path.join(sourcesDir, 'credits.json'), 'utf8')) as Record<
+        string,
+        unknown
+      >)
+    : {};
   const photo = Boolean(credits[slot]);
   if (existsSync(master)) return { kind: photo ? 'photo' : 'procedural', file: master };
   const source = path.join(sourcesDir, `${slot}.jpg`);
   if (photo && existsSync(source)) {
-    await sharp(source).rotate().resize(W, H, { fit: 'cover', position: 'attention' }).modulate({ brightness: 0.72, saturation: 0.85 }).jpeg({ quality: 84, mozjpeg: true }).toFile(master);
+    await sharp(source)
+      .rotate()
+      .resize(W, H, { fit: 'cover', position: 'attention' })
+      .modulate({ brightness: 0.72, saturation: 0.85 })
+      .jpeg({ quality: 84, mozjpeg: true })
+      .toFile(master);
     return { kind: 'photo', file: master };
   }
   await sharp(Buffer.from(PROCEDURAL[slot]())).jpeg({ quality: 88, mozjpeg: true }).toFile(master);
@@ -143,12 +174,20 @@ async function main() {
         buf = await sharp(file).resize(w).avif({ quality, effort: 4 }).toBuffer();
       }
       writeFileSync(path.join(outDir, `${slot}-${w}.avif`), buf);
-      await sharp(file).resize(w).webp({ quality: 70 }).toFile(path.join(outDir, `${slot}-${w}.webp`));
+      await sharp(file)
+        .resize(w)
+        .webp({ quality: 70 })
+        .toFile(path.join(outDir, `${slot}-${w}.webp`));
       avif.push({ width: w, url: `/backgrounds/${slot}-${w}.avif` });
       webp.push({ width: w, url: `/backgrounds/${slot}-${w}.webp` });
     }
     const tiny = await sharp(file).resize(32).blur(1).webp({ quality: 40 }).toBuffer();
-    manifest.slots[slot] = { kind, placeholder: `data:image/webp;base64,${tiny.toString('base64')}`, avif, webp };
+    manifest.slots[slot] = {
+      kind,
+      placeholder: `data:image/webp;base64,${tiny.toString('base64')}`,
+      avif,
+      webp,
+    };
     const size = statSync(path.join(outDir, `${slot}-1920.avif`)).size;
     console.log(`${slot.padEnd(11)} ${kind.padEnd(10)} 1920 AVIF ${Math.round(size / 1024)} KB`);
   }

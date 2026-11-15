@@ -16,4 +16,3 @@ export function renderCanonBlock(e: CanonBlockEntry): string {
   if (e.sourceQuote) lines.push(`Source passage: "${e.sourceQuote}"`);
   return lines.join('\n');
 }
-

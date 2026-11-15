@@ -19,14 +19,15 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     throw new ApiError('Kathix could not reach its server. Check that it is still running.', 0);
   }
   const text = await res.text();
-  let data: unknown = null;
+  let data: unknown;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
     data = null;
   }
   if (!res.ok) {
-    const msg = (data as { error?: string } | null)?.error ?? 'Something went wrong. Please try again.';
+    const msg =
+      (data as { error?: string } | null)?.error ?? 'Something went wrong. Please try again.';
     throw new ApiError(msg, res.status);
   }
   return data as T;
@@ -39,7 +40,7 @@ export const api = {
   del: <T>(url: string) => request<T>('DELETE', url),
 };
 
-export interface StreamHandlers<R> {
+export interface StreamHandlers {
   onDelta?: (text: string) => void;
   onReset?: () => void;
   onEvent?: (event: string, data: unknown) => void;
@@ -47,7 +48,11 @@ export interface StreamHandlers<R> {
 }
 
 /** POSTs and reads a server-sent-events answer; resolves with the `result` event. */
-export async function streamPost<R>(url: string, body: unknown, h: StreamHandlers<R> = {}): Promise<R> {
+export async function streamPost<R>(
+  url: string,
+  body: unknown,
+  h: StreamHandlers = {},
+): Promise<R> {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -98,19 +103,23 @@ export async function streamPost<R>(url: string, body: unknown, h: StreamHandler
 }
 
 /** Reads a File as text (plain files) or base64 (docx, pdf) for upload. */
-export async function readUpload(file: File): Promise<{ name: string; text?: string; base64?: string }> {
+export async function readUpload(
+  file: File,
+): Promise<{ name: string; text?: string; base64?: string }> {
   const lower = file.name.toLowerCase();
   if (lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.fountain')) {
     return { name: file.name, text: await file.text() };
   }
   const buf = new Uint8Array(await file.arrayBuffer());
   let bin = '';
-  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  for (let i = 0; i < buf.length; i += 0x8000)
+    bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
   return { name: file.name, base64: btoa(bin) };
 }
 
 export function download(filename: string, content: string | Blob, type = 'text/plain'): void {
-  const blob = content instanceof Blob ? content : new Blob([content], { type: `${type};charset=utf-8` });
+  const blob =
+    content instanceof Blob ? content : new Blob([content], { type: `${type};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

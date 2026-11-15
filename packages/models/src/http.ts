@@ -64,7 +64,7 @@ export async function httpJson(
     );
   }
   if (!res.ok) {
-    let detail = '';
+    let detail: string;
     try {
       detail = (await res.text()).slice(0, 300);
     } catch {

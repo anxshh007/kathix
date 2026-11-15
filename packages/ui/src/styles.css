@@ -176,7 +176,12 @@ p {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 9, 12, 0.74) 0%, rgba(8, 9, 12, 0.82) 45%, rgba(8, 9, 12, 0.9) 100%),
+    linear-gradient(
+      180deg,
+      rgba(8, 9, 12, 0.74) 0%,
+      rgba(8, 9, 12, 0.82) 45%,
+      rgba(8, 9, 12, 0.9) 100%
+    ),
     radial-gradient(ellipse at 20% 0%, rgba(8, 9, 12, 0.2), rgba(8, 9, 12, 0.6));
 }
 
@@ -187,8 +192,12 @@ p {
   background-image:
     radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     radial-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px);
-  background-size: 3px 3px, 5px 5px;
-  background-position: 0 0, 1px 2px;
+  background-size:
+    3px 3px,
+    5px 5px;
+  background-position:
+    0 0,
+    1px 2px;
 }
 
 html[data-focus='on'] .bg-layer img {
@@ -381,7 +390,9 @@ html[data-focus='on'] .bg-scrim {
   font: inherit;
   font-weight: 560;
   cursor: pointer;
-  transition: background 140ms var(--ease), border-color 140ms var(--ease);
+  transition:
+    background 140ms var(--ease),
+    border-color 140ms var(--ease);
   white-space: nowrap;
 }
 
@@ -950,7 +961,9 @@ html[data-focus='on'] .bg-scrim {
   text-align: left;
   font: inherit;
   cursor: pointer;
-  transition: border-color 160ms var(--ease), transform 160ms var(--ease);
+  transition:
+    border-color 160ms var(--ease),
+    transform 160ms var(--ease);
 }
 
 .tile:hover {

@@ -25,7 +25,12 @@ const serverModule: ServerModule<ForgeService> = {
           maxChars: z.number().int().min(10).max(2000).nullable().optional(),
         }),
       );
-      return c.json(await s.generate({ ...req, projectId: projectOrScratch(ctx, req.projectId ?? undefined).id }));
+      return c.json(
+        await s.generate({
+          ...req,
+          projectId: projectOrScratch(ctx, req.projectId ?? undefined).id,
+        }),
+      );
     });
     app.post('/items/:id/refine', async (c) => {
       const { note } = await body(c, z.object({ note: z.string().max(500).default('') }));
@@ -35,9 +40,19 @@ const serverModule: ServerModule<ForgeService> = {
       const { on } = await body(c, z.object({ on: z.boolean() }));
       return c.json(s.shortlist(c.req.param('id'), on));
     });
-    app.get('/items', (c) => c.json({ items: s.items(projectOrScratch(ctx, c.req.query('projectId')).id, c.req.query('shortlist') === '1') }));
+    app.get('/items', (c) =>
+      c.json({
+        items: s.items(
+          projectOrScratch(ctx, c.req.query('projectId')).id,
+          c.req.query('shortlist') === '1',
+        ),
+      }),
+    );
     app.get('/shortlist.md', (c) =>
-      c.body(s.exportShortlist(projectOrScratch(ctx, c.req.query('projectId')).id), 200, { 'content-type': 'text/markdown; charset=utf-8', 'content-disposition': 'attachment; filename="shortlist.md"' }),
+      c.body(s.exportShortlist(projectOrScratch(ctx, c.req.query('projectId')).id), 200, {
+        'content-type': 'text/markdown; charset=utf-8',
+        'content-disposition': 'attachment; filename="shortlist.md"',
+      }),
     );
   },
 };

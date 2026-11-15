@@ -45,7 +45,9 @@ export interface Runtime {
 }
 
 export function moduleIds(rootDir: string): string[] {
-  const raw = JSON.parse(readFileSync(path.join(rootDir, 'modules.config.json'), 'utf8')) as { modules: string[] };
+  const raw = JSON.parse(readFileSync(path.join(rootDir, 'modules.config.json'), 'utf8')) as {
+    modules: string[];
+  };
   return raw.modules;
 }
 
@@ -56,7 +58,9 @@ async function importModuleFile<T>(rootDir: string, id: string, file: string): P
 }
 
 export async function loadCliModules(rootDir: string): Promise<CliModule[]> {
-  return Promise.all(moduleIds(rootDir).map((id) => importModuleFile<CliModule>(rootDir, id, 'cli.ts')));
+  return Promise.all(
+    moduleIds(rootDir).map((id) => importModuleFile<CliModule>(rootDir, id, 'cli.ts')),
+  );
 }
 
 export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime> {
@@ -65,7 +69,14 @@ export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime>
   const logger = createLogger('kathix', opts.quiet ? 'warn' : 'info');
   const store = new Store(config.dbPath);
   const secrets = new SecretStore(config.dataDir);
-  const router = new ModelRouter({ store, secrets, env: config.env, logger, mock: config.mockProvider, mockResponders });
+  const router = new ModelRouter({
+    store,
+    secrets,
+    env: config.env,
+    logger,
+    mock: config.mockProvider,
+    mockResponders,
+  });
   const capabilities = new CapabilityRegistry();
   const jobs = new JobQueue(store.jobs, 2);
   const events = new EventBus<KathixEvents>();
@@ -85,12 +96,16 @@ export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime>
   };
 
   capabilities.setProbe('store.ready', async () =>
-    store.probe() ? { ok: true, detail: 'Library ready' } : { ok: false, detail: 'Library write failed' },
+    store.probe()
+      ? { ok: true, detail: 'Library ready' }
+      : { ok: false, detail: 'Library write failed' },
   );
   capabilities.setProbe('model.local', () => router.probeLocal());
   capabilities.setProbe('model.text', () => router.probeText());
   capabilities.setProbe('model.structured', () =>
-    capabilities.has('model.text') ? router.probeStructured() : Promise.resolve({ ok: false, detail: 'Needs a writing model first.' }),
+    capabilities.has('model.text')
+      ? router.probeStructured()
+      : Promise.resolve({ ok: false, detail: 'Needs a writing model first.' }),
   );
   capabilities.setProbe('model.embeddings', () => router.probeEmbeddings());
   capabilities.setProbe('model.custom.adaption', () => router.probeAdaption());
@@ -102,7 +117,8 @@ export async function createRuntime(opts: RuntimeOptions = {}): Promise<Runtime>
     ctx.provide(id, service);
     modules.push({ manifest: def.manifest, service, def });
   }
-  for (const m of modules) for (const step of m.def.agentSteps?.(m.service, ctx) ?? []) ctx.agentSteps.set(step.id, step);
+  for (const m of modules)
+    for (const step of m.def.agentSteps?.(m.service, ctx) ?? []) ctx.agentSteps.set(step.id, step);
 
   let refreshTimer: ReturnType<typeof setTimeout> | null = null;
   // Jobs start only after the first probe, so resumed work sees the real capabilities.
@@ -139,7 +155,8 @@ function buildApp(ctx: ModuleContext, modules: LoadedModule[], refresh: () => Pr
   const app = new Hono();
   app.onError((err, c) => {
     const { message, status } = plainError(err);
-    if (status >= 500 && !(err instanceof Error && err.name === 'UserError')) ctx.logger.error('Request failed', err);
+    if (status >= 500 && !(err instanceof Error && err.name === 'UserError'))
+      ctx.logger.error('Request failed', err);
     return c.json({ error: message }, status as 400);
   });
 
@@ -192,7 +209,13 @@ function buildApp(ctx: ModuleContext, modules: LoadedModule[], refresh: () => Pr
     sub.use('*', async (c, next) => {
       const missing = requires.filter((cap) => !ctx.capabilities.has(cap));
       if (missing.length) {
-        return c.json({ error: 'This part of Kathix needs a connected writing model. Open Model Router to connect one.' }, 503);
+        return c.json(
+          {
+            error:
+              'This part of Kathix needs a connected writing model. Open Model Router to connect one.',
+          },
+          503,
+        );
       }
       await next();
     });

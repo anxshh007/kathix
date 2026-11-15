@@ -67,12 +67,17 @@ export class MockAdapter implements ProviderAdapter {
     const pieces = text.match(/[\s\S]{1,40}/g) ?? [''];
     const per = this.latencyMs / Math.max(1, pieces.length);
     for (const p of pieces) {
-      if (req.signal.aborted) throw req.signal.reason instanceof Error ? req.signal.reason : new Error('Aborted');
+      if (req.signal.aborted)
+        throw req.signal.reason instanceof Error ? req.signal.reason : new Error('Aborted');
       await this.wait(per, req.signal);
       req.onDelta?.(p);
     }
     const promptChars = req.messages.reduce((n, m) => n + m.content.length, 0);
-    return { text, inputTokens: Math.ceil(promptChars / 4), outputTokens: Math.ceil(text.length / 4) };
+    return {
+      text,
+      inputTokens: Math.ceil(promptChars / 4),
+      outputTokens: Math.ceil(text.length / 4),
+    };
   }
 
   async embed(texts: string[]): Promise<number[][]> {

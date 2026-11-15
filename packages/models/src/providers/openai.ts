@@ -1,7 +1,8 @@
 import { httpJson, readSse } from '../http';
 import type { CompletionRequest, CompletionResult, ModelInfo, ProviderAdapter } from '../types';
 
-const NON_CHAT = /(embed|whisper|tts|dall-e|moderation|image|audio|realtime|transcribe|search|davinci|babbage|computer-use|sora)/i;
+const NON_CHAT =
+  /(embed|whisper|tts|dall-e|moderation|image|audio|realtime|transcribe|search|davinci|babbage|computer-use|sora)/i;
 
 /** OpenAI and any OpenAI-compatible Chat Completions endpoint. */
 export class OpenAIAdapter implements ProviderAdapter {
@@ -24,14 +25,19 @@ export class OpenAIAdapter implements ProviderAdapter {
   }
 
   async listModels(signal?: AbortSignal): Promise<ModelInfo[]> {
-    const res = await httpJson(this.id, `${this.baseUrl}/models`, { headers: this.headers(), signal });
+    const res = await httpJson(this.id, `${this.baseUrl}/models`, {
+      headers: this.headers(),
+      signal,
+    });
     const body = (await res.json()) as { data?: { id: string; created?: number }[] };
-    return (body.data ?? []).map((m) => ({
-      id: m.id,
-      label: m.id,
-      created: m.created ? m.created * 1000 : undefined,
-      kind: /embed/i.test(m.id) ? ('embedding' as const) : ('chat' as const),
-    })).filter((m) => m.kind === 'embedding' || !NON_CHAT.test(m.id));
+    return (body.data ?? [])
+      .map((m) => ({
+        id: m.id,
+        label: m.id,
+        created: m.created ? m.created * 1000 : undefined,
+        kind: /embed/i.test(m.id) ? ('embedding' as const) : ('chat' as const),
+      }))
+      .filter((m) => m.kind === 'embedding' || !NON_CHAT.test(m.id));
   }
 
   async complete(req: CompletionRequest): Promise<CompletionResult> {

@@ -1,8 +1,28 @@
 import { useEffect, useRef } from 'react';
-import { Annotation, EditorState, RangeSetBuilder, StateEffect, StateField, type Extension } from '@codemirror/state';
-import { Decoration, EditorView, ViewPlugin, keymap, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+import {
+  Annotation,
+  EditorState,
+  RangeSetBuilder,
+  StateEffect,
+  StateField,
+  type Extension,
+} from '@codemirror/state';
+import {
+  Decoration,
+  EditorView,
+  ViewPlugin,
+  keymap,
+  type DecorationSet,
+  type ViewUpdate,
+} from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { applyAuthorChange, classifyLine, fitSpans, spansToRanges, type AuthorSpan } from '@kathix/kernel/shared';
+import {
+  applyAuthorChange,
+  classifyLine,
+  fitSpans,
+  spansToRanges,
+  type AuthorSpan,
+} from '@kathix/kernel/shared';
 
 /** Marks a transaction that loads text from the server (no authorship change). */
 export const remoteLoad = Annotation.define<boolean>();
@@ -31,7 +51,8 @@ const scriptLines = ViewPlugin.fromClass(
           const line = view.state.doc.lineAt(pos);
           const k = classifyLine(line.text).kind;
           if (k === 'heading' || k === 'note') b.add(line.from, line.from, lineDeco[k]);
-          else if (k === 'speaker') b.add(line.from, line.from + line.text.indexOf(':') + 1, speakerMark);
+          else if (k === 'speaker')
+            b.add(line.from, line.from + line.text.indexOf(':') + 1, speakerMark);
           pos = line.to + 1;
         }
       }
@@ -61,7 +82,11 @@ const flashField = StateField.define<DecorationSet>({
   update(deco, tr) {
     let next = deco.map(tr.changes);
     for (const e of tr.effects) {
-      if (e.is(setFlash)) next = e.value && e.value.to > e.value.from ? Decoration.set([flashMark.range(e.value.from, e.value.to)]) : Decoration.none;
+      if (e.is(setFlash))
+        next =
+          e.value && e.value.to > e.value.from
+            ? Decoration.set([flashMark.range(e.value.from, e.value.to)])
+            : Decoration.none;
     }
     return next;
   },
@@ -69,7 +94,9 @@ const flashField = StateField.define<DecorationSet>({
 });
 
 function aiDecorations(spans: AuthorSpan[], len: number): DecorationSet {
-  const ranges = spansToRanges(fitSpans(spans, len)).filter((r) => r.origin !== 'human' && r.end > r.start);
+  const ranges = spansToRanges(fitSpans(spans, len)).filter(
+    (r) => r.origin !== 'human' && r.end > r.start,
+  );
   return Decoration.set(ranges.map((r) => aiMark.range(r.start, r.end)));
 }
 
@@ -110,9 +137,12 @@ export function ScriptEditor({
         if (!remote) {
           // Map authorship through every change; typed text is the creator's.
           const changes: [number, number, number][] = [];
-          u.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => changes.push([fromA, toA, inserted.length]));
+          u.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) =>
+            changes.push([fromA, toA, inserted.length]),
+          );
           let spans = fitSpans(spansRef.current, u.startState.doc.length);
-          for (const [fromA, toA, len] of changes.reverse()) spans = applyAuthorChange(spans, fromA, toA, len, 'human');
+          for (const [fromA, toA, len] of changes.reverse())
+            spans = applyAuthorChange(spans, fromA, toA, len, 'human');
           spansRef.current = spans;
         }
         handlers.current.onChange(u.state.doc.toString());
@@ -132,8 +162,14 @@ export function ScriptEditor({
       tracker,
       EditorView.contentAttributes.of({ 'aria-label': 'Script text', spellcheck: 'true' }),
     ];
-    const view = new EditorView({ state: EditorState.create({ doc: initialText, extensions }), parent: host.current });
-    if (showAiRef.current) view.dispatch({ effects: setAiMarks.of(aiDecorations(spansRef.current, initialText.length)) });
+    const view = new EditorView({
+      state: EditorState.create({ doc: initialText, extensions }),
+      parent: host.current,
+    });
+    if (showAiRef.current)
+      view.dispatch({
+        effects: setAiMarks.of(aiDecorations(spansRef.current, initialText.length)),
+      });
     onReady({
       view,
       getSpans: () => fitSpans(spansRef.current, view.state.doc.length),
@@ -144,17 +180,27 @@ export function ScriptEditor({
           changes: { from: 0, to: view.state.doc.length, insert: text },
           annotations: remoteLoad.of(true),
           selection: keepCursor ? { anchor: head } : undefined,
-          effects: setAiMarks.of(showAiRef.current ? aiDecorations(spansRef.current, text.length) : Decoration.none),
+          effects: setAiMarks.of(
+            showAiRef.current ? aiDecorations(spansRef.current, text.length) : Decoration.none,
+          ),
         });
       },
       select(from, to) {
         const len = view.state.doc.length;
-        view.dispatch({ selection: { anchor: Math.min(from, len), head: Math.min(to, len) }, scrollIntoView: true });
+        view.dispatch({
+          selection: { anchor: Math.min(from, len), head: Math.min(to, len) },
+          scrollIntoView: true,
+        });
         view.focus();
       },
       flash(from, to) {
         const len = view.state.doc.length;
-        view.dispatch({ effects: [setFlash.of({ from: Math.min(from, len), to: Math.min(to, len) }), EditorView.scrollIntoView(Math.min(from, len), { y: 'center' })] });
+        view.dispatch({
+          effects: [
+            setFlash.of({ from: Math.min(from, len), to: Math.min(to, len) }),
+            EditorView.scrollIntoView(Math.min(from, len), { y: 'center' }),
+          ],
+        });
         setTimeout(() => view.dispatch({ effects: setFlash.of(null) }), 1800);
       },
     });
@@ -169,5 +215,9 @@ export function ScriptEditor({
 }
 
 export function refreshAiMarks(h: EditorHandle, on: boolean): void {
-  h.view.dispatch({ effects: setAiMarks.of(on ? aiDecorations(h.getSpans(), h.view.state.doc.length) : Decoration.none) });
+  h.view.dispatch({
+    effects: setAiMarks.of(
+      on ? aiDecorations(h.getSpans(), h.view.state.doc.length) : Decoration.none,
+    ),
+  });
 }

@@ -18,7 +18,9 @@ describe('Voice Mirror', () => {
     expect(ada.sentenceLength.mean).toBeGreaterThan(bram.sentenceLength.mean * 2);
     expect(ada.pointOfView.dominant).toBe('third person');
     expect(bram.pointOfView.dominant).toBe('first person');
-    expect(ada.punctuationPer1000.semicolon).toBeGreaterThan(bram.punctuationPer1000.semicolon ?? 0);
+    expect(ada.punctuationPer1000.semicolon).toBeGreaterThan(
+      bram.punctuationPer1000.semicolon ?? 0,
+    );
     expect(bram.contractionsPer1000).toBeGreaterThan(ada.contractionsPer1000);
     expect(matchScore(ada, bram).score).toBeLessThan(60);
   });
@@ -31,7 +33,10 @@ describe('Voice Mirror', () => {
   });
 
   it('flags drifting lines with reasons', () => {
-    const lines = driftReport(bram, 'I walk to the quay. The sea is cold. The harbour, which had for many generations stood patient beneath the lighthouse and its slow turning beam, received the evening as it always had; quietly, and without complaint, and with a kind of grave courtesy.');
+    const lines = driftReport(
+      bram,
+      'I walk to the quay. The sea is cold. The harbour, which had for many generations stood patient beneath the lighthouse and its slow turning beam, received the evening as it always had; quietly, and without complaint, and with a kind of grave courtesy.',
+    );
     const drifting = lines.filter((l) => l.drift);
     expect(drifting).toHaveLength(1);
     expect(drifting[0]?.reasons.join(' ')).toMatch(/longer|semicolon/);

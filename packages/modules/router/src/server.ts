@@ -30,26 +30,39 @@ export function createRouterService(ctx: ModuleContext) {
       refreshCaps();
     },
     remove(id: string) {
-      if (!router.removeProvider(id)) throw new UserError('Providers set through environment variables are removed by editing your .env file.');
+      if (!router.removeProvider(id))
+        throw new UserError(
+          'Providers set through environment variables are removed by editing your .env file.',
+        );
       refreshCaps();
     },
     setRpm: (id: string, rpm: number) => router.setRpm(id, rpm),
     tiers: () => router.tiers(),
-    setTier: (tier: Tier, targets: { providerId: string; model: string }[]) => router.setTier(tier, targets),
+    setTier: (tier: Tier, targets: { providerId: string; model: string }[]) =>
+      router.setTier(tier, targets),
     get localOnly() {
       return router.localOnly;
     },
     setLocalOnly(on: boolean) {
-      if (on && !ctx.capabilities.has('model.local')) throw new UserError('No local model runtime is answering, so local-only mode is not available.');
+      if (on && !ctx.capabilities.has('model.local'))
+        throw new UserError(
+          'No local model runtime is answering, so local-only mode is not available.',
+        );
       router.setLocalOnly(on);
       refreshCaps();
     },
     usage: () => ({ ...ctx.store.usageSummary(), prices: router.prices() }),
-    setPrice: (p: { providerId: string; model: string; input: number; output: number }) => router.setPrice(p.providerId, p.model, p.input, p.output),
+    setPrice: (p: { providerId: string; model: string; input: number; output: number }) =>
+      router.setPrice(p.providerId, p.model, p.input, p.output),
     adaption() {
       const status = router.statuses().find((s) => s.config.kind === 'adaption');
       return status
-        ? { configured: true, model: router.adaptionModel, models: status.models.map((m) => m.id), available: ctx.capabilities.has('model.custom.adaption') }
+        ? {
+            configured: true,
+            model: router.adaptionModel,
+            models: status.models.map((m) => m.id),
+            available: ctx.capabilities.has('model.custom.adaption'),
+          }
         : { configured: false, model: '', models: [], available: false };
     },
     async setAdaptionModel(model: string) {
@@ -100,7 +113,10 @@ const serverModule: ServerModule<RouterService> = {
     app.get('/tiers', (c) => c.json({ tiers: s.tiers() }));
     app.put('/tiers/:tier', async (c) => {
       const tier = tierSchema.parse(c.req.param('tier'));
-      const { targets } = await body(c, z.object({ targets: z.array(z.object({ providerId: z.string(), model: z.string() })) }));
+      const { targets } = await body(
+        c,
+        z.object({ targets: z.array(z.object({ providerId: z.string(), model: z.string() })) }),
+      );
       s.setTier(tier, targets);
       return c.json({ tiers: s.tiers() });
     });
@@ -111,7 +127,17 @@ const serverModule: ServerModule<RouterService> = {
     });
     app.get('/usage', (c) => c.json(s.usage()));
     app.put('/prices', async (c) => {
-      s.setPrice(await body(c, z.object({ providerId: z.string(), model: z.string(), input: z.number().min(0), output: z.number().min(0) })));
+      s.setPrice(
+        await body(
+          c,
+          z.object({
+            providerId: z.string(),
+            model: z.string(),
+            input: z.number().min(0),
+            output: z.number().min(0),
+          }),
+        ),
+      );
       return c.json({ ok: true });
     });
     app.get('/adaption', (c) => c.json(s.adaption()));

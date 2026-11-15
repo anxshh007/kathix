@@ -18,7 +18,9 @@ export class Db {
   constructor(file: string) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.raw = new DatabaseSync(file);
-    this.raw.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
+    this.raw.exec(
+      'PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;',
+    );
   }
 
   private stmt(sql: string) {

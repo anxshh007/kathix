@@ -32,8 +32,16 @@ export const showrunnerPlan: PromptTemplate<PlanInput, PlanOutput> = {
   ],
   schema: planSchema,
   data: (i) => [
-    { id: 'available-steps', kind: 'available-steps', text: i.steps.map((s) => `${s.id}: ${s.label}. ${s.description}`).join('\n') },
-    { id: 'state', kind: 'project-state', text: `Outline provided: ${i.hasOutline ? 'yes' : 'no'}. Script already has text: ${i.hasScriptText ? 'yes' : 'no'}.` },
+    {
+      id: 'available-steps',
+      kind: 'available-steps',
+      text: i.steps.map((s) => `${s.id}: ${s.label}. ${s.description}`).join('\n'),
+    },
+    {
+      id: 'state',
+      kind: 'project-state',
+      text: `Outline provided: ${i.hasOutline ? 'yes' : 'no'}. Script already has text: ${i.hasScriptText ? 'yes' : 'no'}.`,
+    },
   ],
   mock: (i) => ({
     steps: i.steps
@@ -68,7 +76,8 @@ export const draftFromOutline: PromptTemplate<DraftInput, DraftOutput> = {
   temperature: 0.7,
   maxTokens: 12000,
   role: "You draft a script from the creator's own outline, as a starting point they will revise.",
-  task: (i) => `Draft "${i.title}" as a ${i.projectType} script that follows the outline beat by beat.`,
+  task: (i) =>
+    `Draft "${i.title}" as a ${i.projectType} script that follows the outline beat by beat.`,
   rules: [
     'Use the script format: scene headings (SCENE or INT./EXT.), SPEAKER: dialogue lines, and [bracketed notes] for sound or direction.',
     'Follow the outline order. Do not add plot beats the outline does not imply.',
@@ -87,7 +96,10 @@ export const draftFromOutline: PromptTemplate<DraftInput, DraftOutput> = {
     ...(i.voice ? [{ id: 'voice', kind: 'voice-profile', text: i.voice }] : []),
   ],
   mock: (i) => {
-    const beats = splitParagraphs(i.outline).flatMap((p) => p.text.split('\n')).map((l) => l.replace(/^[-*\d.)\s]+/, '').trim()).filter(Boolean);
+    const beats = splitParagraphs(i.outline)
+      .flatMap((p) => p.text.split('\n'))
+      .map((l) => l.replace(/^[-*\d.)\s]+/, '').trim())
+      .filter(Boolean);
     const lines = [`SCENE 1 - ${i.title.toUpperCase()}`, ''];
     beats.forEach((b, n) => {
       if (n > 0 && n % 3 === 0) lines.push('', `SCENE ${n / 3 + 1}`, '');

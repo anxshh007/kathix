@@ -56,10 +56,19 @@ function mockOptions(i: ForgeInput, n: number): ForgeOutput {
       text,
       claims: honest
         ? [{ claim: base, scriptQuote: s?.text ?? '' }]
-        : [{ claim: base, scriptQuote: s?.text ?? '' }, { claim: 'a secret nobody survives', scriptQuote: '' }],
+        : [
+            { claim: base, scriptQuote: s?.text ?? '' },
+            { claim: 'a secret nobody survives', scriptQuote: '' },
+          ],
       clarity: { score: 7, reason: 'Names the situation directly.' },
-      curiosity: { score: honest ? 6 : 9, reason: honest ? 'Raises a question the episode answers.' : 'Teases a deadly secret.' },
-      honesty: { score: honest ? 9 : 3, reason: honest ? 'The script delivers this.' : 'The script never shows such a secret.' },
+      curiosity: {
+        score: honest ? 6 : 9,
+        reason: honest ? 'Raises a question the episode answers.' : 'Teases a deadly secret.',
+      },
+      honesty: {
+        score: honest ? 9 : 3,
+        reason: honest ? 'The script delivers this.' : 'The script never shows such a secret.',
+      },
     });
   }
   return { options };
@@ -73,7 +82,7 @@ export const forgeGenerate: PromptTemplate<ForgeInput, ForgeOutput> = {
   maxTokens: 3000,
   role: "You are a packaging editor for a creator's episode. You write hooks, titles and descriptions that are compelling and true to the episode.",
   task: (i) =>
-    `Write ${i.count} distinct ${i.kind} options for ${i.platform}, aimed at ${i.audience || 'the creator\'s audience'}, in a ${i.tone || 'natural'} tone. Hard limit: ${i.maxChars} characters each.`,
+    `Write ${i.count} distinct ${i.kind} options for ${i.platform}, aimed at ${i.audience || "the creator's audience"}, in a ${i.tone || 'natural'} tone. Hard limit: ${i.maxChars} characters each.`,
   rules: [...forgeRules, 'If a voice profile is given, the options should sound like that voice.'],
   schema: forgeSchema,
   data: (i) => [
@@ -105,7 +114,10 @@ export const forgeRefine: PromptTemplate<ForgeRefineInput, ForgeOutput> = {
   ],
   mock: (i) => {
     const out = mockOptions(i, 3);
-    out.options = out.options.map((o, k) => ({ ...o, text: `${i.favourite}${k ? ` (${k + 1})` : ''}`.slice(0, i.maxChars) }));
+    out.options = out.options.map((o, k) => ({
+      ...o,
+      text: `${i.favourite}${k ? ` (${k + 1})` : ''}`.slice(0, i.maxChars),
+    }));
     return out;
   },
 };

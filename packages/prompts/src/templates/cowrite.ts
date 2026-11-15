@@ -51,7 +51,8 @@ const ACTION_TASK: Record<CowriteAction, string> = {
   expand: 'Expand the selected passage with sensory detail and beats that fit the scene.',
   tone: 'Rewrite the selected passage in the tone the creator asks for.',
   alternatives: 'Offer three distinct alternative versions of the selected passage.',
-  punchup: 'Punch up the dialogue in the selected passage: sharper lines, more character, same intent.',
+  punchup:
+    'Punch up the dialogue in the selected passage: sharper lines, more character, same intent.',
   instruction: "Follow the creator's instruction for the selected passage or the cursor position.",
 };
 
@@ -61,34 +62,93 @@ function mockCowrite(i: CowriteInput): CowriteOutput {
   const base = i.selection || i.before.slice(-240);
   const firstCanon = i.canon[0];
   const ev = firstCanon
-    ? [{ sourceId: firstCanon.id, quote: (splitSentences(firstCanon.text)[0]?.text ?? firstCanon.text).slice(0, 80) }]
+    ? [
+        {
+          sourceId: firstCanon.id,
+          quote: (splitSentences(firstCanon.text)[0]?.text ?? firstCanon.text).slice(0, 80),
+        },
+      ]
     : [];
   const one = (text: string, reason: string) => ({ text, reason, evidence: ev });
   switch (i.action) {
     case 'tighten':
-      return { suggestions: [one(base.replace(FILLER, '').replace(/\s{2,}/g, ' ').trim(), 'Cuts filler words so the beat lands faster.')], notEnoughInformation: false };
+      return {
+        suggestions: [
+          one(
+            base
+              .replace(FILLER, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim(),
+            'Cuts filler words so the beat lands faster.',
+          ),
+        ],
+        notEnoughInformation: false,
+      };
     case 'expand':
-      return { suggestions: [one(`${base.trim()} The lamp hissed, and for a moment nobody moved.`, 'Adds a sensory beat to hold the moment.')], notEnoughInformation: false };
+      return {
+        suggestions: [
+          one(
+            `${base.trim()} The lamp hissed, and for a moment nobody moved.`,
+            'Adds a sensory beat to hold the moment.',
+          ),
+        ],
+        notEnoughInformation: false,
+      };
     case 'alternatives':
       return {
         suggestions: [
           one(base.trim().replace(/\.$/, '!'), 'A more urgent reading of the same line.'),
           one(`Quietly: ${base.trim()}`, 'A hushed reading that raises tension.'),
-          one(base.trim().split(' ').reverse().slice(0, 3).reverse().join(' '), 'A clipped version that leaves space.'),
+          one(
+            base.trim().split(' ').reverse().slice(0, 3).reverse().join(' '),
+            'A clipped version that leaves space.',
+          ),
         ].slice(0, Math.max(1, i.count)),
         notEnoughInformation: false,
       };
     case 'continue': {
       const who = firstCanon ? firstCanon.label.split(' ')[0] : 'Someone';
-      return { suggestions: [one(`\n${who} looked toward the water and said nothing for a long while.`, 'Continues the scene with a quiet beat before the next turn.')], notEnoughInformation: false };
+      return {
+        suggestions: [
+          one(
+            `\n${who} looked toward the water and said nothing for a long while.`,
+            'Continues the scene with a quiet beat before the next turn.',
+          ),
+        ],
+        notEnoughInformation: false,
+      };
     }
     case 'punchup':
-      return { suggestions: [one(base.trim().replace(/\?$/, '?!'), 'Gives the line more bite.')], notEnoughInformation: false };
+      return {
+        suggestions: [one(base.trim().replace(/\?$/, '?!'), 'Gives the line more bite.')],
+        notEnoughInformation: false,
+      };
     case 'tone':
-      return { suggestions: [one(base.trim().toLowerCase().replace(/^./, (c) => c.toUpperCase()), `Shifts the tone toward "${i.instruction || 'softer'}".`)], notEnoughInformation: false };
+      return {
+        suggestions: [
+          one(
+            base
+              .trim()
+              .toLowerCase()
+              .replace(/^./, (c) => c.toUpperCase()),
+            `Shifts the tone toward "${i.instruction || 'softer'}".`,
+          ),
+        ],
+        notEnoughInformation: false,
+      };
     case 'rewrite':
     case 'instruction':
-      return { suggestions: [one(base.trim().replace(/\s+and\s+/, ', and '), i.instruction ? `Follows the note: ${i.instruction}` : 'Smooths the rhythm of the passage.')], notEnoughInformation: false };
+      return {
+        suggestions: [
+          one(
+            base.trim().replace(/\s+and\s+/, ', and '),
+            i.instruction
+              ? `Follows the note: ${i.instruction}`
+              : 'Smooths the rhythm of the passage.',
+          ),
+        ],
+        notEnoughInformation: false,
+      };
   }
 }
 
@@ -113,13 +173,27 @@ export const cowrite: PromptTemplate<CowriteInput, CowriteOutput> = {
   schema: cowriteSchema,
   streamField: 'text',
   data: (i) => [
-    { id: 'before', kind: 'script-before-selection', text: i.before.slice(-3000) || '(start of script)' },
-    { id: 'selection', kind: 'selected-passage', text: i.selection || '(cursor position, nothing selected)' },
-    { id: 'after', kind: 'script-after-selection', text: i.after.slice(0, 1200) || '(end of script)' },
+    {
+      id: 'before',
+      kind: 'script-before-selection',
+      text: i.before.slice(-3000) || '(start of script)',
+    },
+    {
+      id: 'selection',
+      kind: 'selected-passage',
+      text: i.selection || '(cursor position, nothing selected)',
+    },
+    {
+      id: 'after',
+      kind: 'script-after-selection',
+      text: i.after.slice(0, 1200) || '(end of script)',
+    },
     ...i.canon.map((c) => ({ id: c.id, kind: 'canon-entry', label: c.label, text: c.text })),
     ...i.passages.map((p) => ({ id: p.id, kind: 'past-passage', label: p.label, text: p.text })),
     ...(i.voice ? [{ id: 'voice', kind: 'voice-profile', text: i.voice }] : []),
-    ...(i.rejectNotes.length ? [{ id: 'rejections', kind: 'creator-rejection-notes', text: i.rejectNotes.join('\n') }] : []),
+    ...(i.rejectNotes.length
+      ? [{ id: 'rejections', kind: 'creator-rejection-notes', text: i.rejectNotes.join('\n') }]
+      : []),
   ],
   mock: mockCowrite,
 };
@@ -158,8 +232,13 @@ export const coach: PromptTemplate<CoachInput, CoachOutput> = {
   mock: (i) => {
     const sentences = splitSentences(i.text).filter((s) => s.text.length > 12);
     return {
-      questions: sentences.slice(0, 2).map((s) => ({ question: 'What does the listener need to feel at this moment?', quote: s.text })),
-      weakBeats: sentences.slice(2, 3).map((s) => ({ quote: s.text, why: 'This beat restates what the scene already showed.' })),
+      questions: sentences.slice(0, 2).map((s) => ({
+        question: 'What does the listener need to feel at this moment?',
+        quote: s.text,
+      })),
+      weakBeats: sentences
+        .slice(2, 3)
+        .map((s) => ({ quote: s.text, why: 'This beat restates what the scene already showed.' })),
     };
   },
 };

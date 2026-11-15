@@ -14,17 +14,40 @@ import { useStudio } from './studio';
 
 type ButtonKind = 'primary' | 'ai' | 'danger' | 'ghost' | 'default';
 
+/**
+ * Controls are never greyed out. A button whose action is not ready yet (for
+ * example, a form still missing its text) stays clickable and says what it needs.
+ */
 export function Button({
   kind = 'default',
   size,
   busy,
   className,
   children,
+  disabled,
+  needs,
+  onClick,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { kind?: ButtonKind; size?: 'small'; busy?: boolean }) {
-  const cls = ['btn', kind !== 'default' ? kind : '', size ?? '', className ?? ''].filter(Boolean).join(' ');
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  kind?: ButtonKind;
+  size?: 'small';
+  busy?: boolean;
+  needs?: string;
+}) {
+  const { toast } = useStudio();
+  const cls = ['btn', kind !== 'default' ? kind : '', size ?? '', className ?? '']
+    .filter(Boolean)
+    .join(' ');
+  const waiting = Boolean(disabled) && !busy;
   return (
-    <button type="button" className={cls} aria-busy={busy ? 'true' : undefined} {...rest} disabled={busy || rest.disabled}>
+    <button
+      type="button"
+      className={cls}
+      aria-busy={busy ? 'true' : undefined}
+      {...rest}
+      disabled={busy}
+      onClick={waiting ? () => toast(needs ?? 'Fill in what this needs first.') : onClick}
+    >
       {children}
     </button>
   );
@@ -95,7 +118,14 @@ export function Menu({ label, items }: { label: string; items: MenuItem[] }) {
   if (!items.length) return null;
   return (
     <div className="menu-wrap" ref={ref}>
-      <Button kind="ghost" className="icon" aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
+      <Button
+        kind="ghost"
+        className="icon"
+        aria-label={label}
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((o) => !o)}
+      >
         <Icon name="more" />
       </Button>
       {open && (
@@ -173,7 +203,15 @@ export function Panel({
   );
 }
 
-export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
+export function Field({
+  label,
+  children,
+  hint,
+}: {
+  label: string;
+  children: ReactNode;
+  hint?: string;
+}) {
   return (
     <label className="field">
       <span>{label}</span>
@@ -183,16 +221,40 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
-export function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function Switch({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <label className="switch">
-      <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={label} />
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-label={label}
+      />
       <span>{label}</span>
     </label>
   );
 }
 
-export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs: { id: T; label: string }[]; value: T; onChange: (v: T) => void; label: string }) {
+export function Tabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+  label,
+}: {
+  tabs: { id: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+}) {
   return (
     <div className="tabs" role="tablist" aria-label={label}>
       {tabs.map((t) => (
@@ -204,7 +266,15 @@ export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs:
   );
 }
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="empty">
       <h3>{title}</h3>
@@ -214,20 +284,43 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
   );
 }
 
-export function Badge({ children, tone }: { children: ReactNode; tone?: 'warm' | 'ai' | 'high' | 'medium' | 'ok' }) {
+export function Badge({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone?: 'warm' | 'ai' | 'high' | 'medium' | 'ok';
+}) {
   return <span className={`badge ${tone ?? ''}`}>{children}</span>;
 }
 
 export function Meter({ value, label, ai }: { value: number; label: string; ai?: boolean }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className={`meter ${ai ? 'ai' : ''}`} role="meter" aria-label={label} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+    <div
+      className={`meter ${ai ? 'ai' : ''}`}
+      role="meter"
+      aria-label={label}
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
       <div style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
-export function Dialog({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+export function Dialog({
+  title,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -238,7 +331,13 @@ export function Dialog({ title, onClose, children, wide }: { title: string; onCl
   }, [onClose]);
   return (
     <div className="dialog-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`dialog ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
+      <div
+        className={`dialog ${wide ? 'wide' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        ref={ref}
+      >
         <div className="row spread">
           <h2>{title}</h2>
           <Button kind="ghost" className="icon" aria-label="Close" onClick={onClose}>
@@ -256,13 +355,27 @@ export function DiffView({ before, after }: { before: string; after: string }) {
   return (
     <div className="diff" aria-label="Proposed change">
       {parts.map((p, i) =>
-        p.added ? <ins key={i}>{p.value}</ins> : p.removed ? <del key={i}>{p.value}</del> : <span key={i}>{p.value}</span>,
+        p.added ? (
+          <ins key={i}>{p.value}</ins>
+        ) : p.removed ? (
+          <del key={i}>{p.value}</del>
+        ) : (
+          <span key={i}>{p.value}</span>
+        ),
       )}
     </div>
   );
 }
 
-export function EvidenceList({ items, onOpen, empty }: { items: EvidenceRef[]; onOpen?: (e: EvidenceRef) => void; empty?: string }) {
+export function EvidenceList({
+  items,
+  onOpen,
+  empty,
+}: {
+  items: EvidenceRef[];
+  onOpen?: (e: EvidenceRef) => void;
+  empty?: string;
+}) {
   const [open, setOpen] = useState<EvidenceRef | null>(null);
   if (!items.length) return empty ? <p className="muted small">{empty}</p> : null;
   return (
@@ -325,7 +438,12 @@ export function SuggestionCard({
         {suggestion.model && <span className="muted small">{suggestion.model}</span>}
       </div>
       {mode === 'edit' ? (
-        <textarea className="textarea script" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Edit suggestion before accepting" />
+        <textarea
+          className="textarea script"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          aria-label="Edit suggestion before accepting"
+        />
       ) : (
         <DiffView before={suggestion.originalText} after={suggestion.proposedText} />
       )}
@@ -336,7 +454,12 @@ export function SuggestionCard({
       <EvidenceList items={suggestion.evidence} empty={emptyEvidence} />
       {mode === 'reject' && (
         <Field label="What was wrong? (optional, shapes the next attempt)">
-          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Too formal for this character" />
+          <input
+            className="input"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Too formal for this character"
+          />
         </Field>
       )}
       <div className="row">
@@ -353,7 +476,10 @@ export function SuggestionCard({
         )}
         {mode === 'edit' && (
           <>
-            <ActionButton kind="primary" onAction={() => onAccept(draft, draft !== suggestion.proposedText)}>
+            <ActionButton
+              kind="primary"
+              onAction={() => onAccept(draft, draft !== suggestion.proposedText)}
+            >
               Accept my edit
             </ActionButton>
             <Button kind="ghost" onClick={() => setMode('view')}>
@@ -388,7 +514,8 @@ export function Background({ slot }: { slot: string }) {
       </div>
     );
   }
-  const srcset = (list: { width: number; url: string }[]) => list.map((s) => `${s.url} ${s.width}w`).join(', ');
+  const srcset = (list: { width: number; url: string }[]) =>
+    list.map((s) => `${s.url} ${s.width}w`).join(', ');
   return (
     <div className="bg-layer" aria-hidden="true">
       <img className="bg-placeholder" src={entry.placeholder} alt="" />

@@ -21,7 +21,9 @@ export function JobsTray() {
   });
 
   const visible = jobs.filter(
-    (j) => !hidden.has(j.id) && (j.status === 'queued' || j.status === 'running' || j.status === 'failed'),
+    (j) =>
+      !hidden.has(j.id) &&
+      (j.status === 'queued' || j.status === 'running' || j.status === 'failed'),
   );
   if (!visible.length) return null;
   return (
@@ -30,22 +32,41 @@ export function JobsTray() {
         <div className="job" key={j.id} role="status">
           <div className="row spread">
             <strong>{j.label}</strong>
-            <span className="muted small">{j.status === 'failed' ? 'Stopped' : j.status === 'queued' ? 'Waiting' : `${Math.round(j.progress * 100)}%`}</span>
+            <span className="muted small">
+              {j.status === 'failed'
+                ? 'Stopped'
+                : j.status === 'queued'
+                  ? 'Waiting'
+                  : `${Math.round(j.progress * 100)}%`}
+            </span>
           </div>
-          {j.status !== 'failed' && <Meter value={j.progress * 100} label={`${j.label} progress`} />}
+          {j.status !== 'failed' && (
+            <Meter value={j.progress * 100} label={`${j.label} progress`} />
+          )}
           <span className="small muted">{j.status === 'failed' ? j.error : j.message}</span>
           <div className="row">
             {j.status === 'failed' ? (
               <>
-                <Button size="small" onClick={() => void attempt(() => api.post(`/api/jobs/${j.id}/retry`))}>
+                <Button
+                  size="small"
+                  onClick={() => void attempt(() => api.post(`/api/jobs/${j.id}/retry`))}
+                >
                   Try again
                 </Button>
-                <Button size="small" kind="ghost" onClick={() => setHidden((h) => new Set(h).add(j.id))}>
+                <Button
+                  size="small"
+                  kind="ghost"
+                  onClick={() => setHidden((h) => new Set(h).add(j.id))}
+                >
                   Dismiss
                 </Button>
               </>
             ) : (
-              <Button size="small" kind="ghost" onClick={() => void attempt(() => api.post(`/api/jobs/${j.id}/cancel`))}>
+              <Button
+                size="small"
+                kind="ghost"
+                onClick={() => void attempt(() => api.post(`/api/jobs/${j.id}/cancel`))}
+              >
                 Cancel
               </Button>
             )}

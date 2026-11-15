@@ -15,7 +15,12 @@ export const ISSUE_TYPES = [
 
 const RESERVED = new Set(['name', 'type', 'also called', 'summary', 'source passage']);
 
-function parseCanonBlock(text: string): { name: string; type: string; aliases: string[]; attrs: [string, string][] } {
+function parseCanonBlock(text: string): {
+  name: string;
+  type: string;
+  aliases: string[];
+  attrs: [string, string][];
+} {
   let name = '';
   let type = '';
   let aliases: string[] = [];
@@ -60,9 +65,27 @@ export const continuitySchema = z.object({
 export type ContinuityOutput = z.infer<typeof continuitySchema>;
 type Issue = ContinuityOutput['issues'][number];
 
-const COLORS = ['grey', 'gray', 'blue', 'green', 'brown', 'black', 'hazel', 'amber', 'red', 'white', 'golden', 'silver'];
-const STOP = new Set('the a an of to in on at and or with after before from into over is are was were be his her their its that this'.split(' '));
-const keywords = (v: string) => (v.toLowerCase().match(/[a-z]{4,}/g) ?? []).filter((w) => !STOP.has(w));
+const COLORS = [
+  'grey',
+  'gray',
+  'blue',
+  'green',
+  'brown',
+  'black',
+  'hazel',
+  'amber',
+  'red',
+  'white',
+  'golden',
+  'silver',
+];
+const STOP = new Set(
+  'the a an of to in on at and or with after before from into over is are was were be his her their its that this'.split(
+    ' ',
+  ),
+);
+const keywords = (v: string) =>
+  (v.toLowerCase().match(/[a-z]{4,}/g) ?? []).filter((w) => !STOP.has(w));
 
 /** Deterministic rule-based checker standing in for the model in tests. */
 function mockContinuity(input: ContinuityInput): ContinuityOutput {
@@ -74,14 +97,18 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
   };
   const knownParts = new Set<string>();
   const blocks = input.canon.map((c) => ({ block: c, ...parseCanonBlock(c.text) }));
-  for (const b of blocks) for (const n of [b.name, ...b.aliases]) for (const p of n.split(/\s+/)) knownParts.add(p.toLowerCase());
+  for (const b of blocks)
+    for (const n of [b.name, ...b.aliases])
+      for (const p of n.split(/\s+/)) knownParts.add(p.toLowerCase());
 
   for (const b of blocks) {
     if (!b.name) continue;
     const first = b.name.split(/\s+/)[0] as string;
     const mentions = sentences.filter((s) => new RegExp(`\\b${first}\\b`).test(s.text));
     // Name drift (characters only)
-    for (const part of b.type === 'character' ? b.name.split(/\s+/).filter((p) => p.length >= 5) : []) {
+    for (const part of b.type === 'character'
+      ? b.name.split(/\s+/).filter((p) => p.length >= 5)
+      : []) {
       for (const s of sentences) {
         for (const w of s.text.match(/\b[A-Z][a-z]{3,}\b/g) ?? []) {
           if (knownParts.has(w.toLowerCase())) continue;
@@ -153,7 +180,11 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
         for (const s of mentions) {
           const t = s.text.toLowerCase();
           const hits = kw.filter((w) => t.includes(w));
-          if (kw.length && hits.length >= Math.min(2, kw.length) && !/(afraid|fear|hesitat|refus|froze|could not|couldn't)/.test(t)) {
+          if (
+            kw.length &&
+            hits.length >= Math.min(2, kw.length) &&
+            !/(afraid|fear|hesitat|refus|froze|could not|couldn't)/.test(t)
+          ) {
             add({
               type: 'character_trait',
               severity: 'medium',
@@ -163,7 +194,8 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
               refSourceId: b.block.id,
               refQuote: `${key}: ${value}`,
               fixReplacement: `${first} stopped at the edge, unable to make himself go further.`,
-              fixReason: 'Keeps the character consistent with the trait the audience already knows.',
+              fixReason:
+                'Keeps the character consistent with the trait the audience already knows.',
             });
           }
         }
@@ -181,7 +213,9 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
               draftQuote: line.trim(),
               refSourceId: b.block.id,
               refQuote: `${key}: ${value}`,
-              fixReplacement: line.trim().replace(new RegExp(`^\\s*${info.speaker}`), 'VOICE ON THE RADIO'),
+              fixReplacement: line
+                .trim()
+                .replace(new RegExp(`^\\s*${info.speaker}`), 'VOICE ON THE RADIO'),
               fixReason: 'Gives the line to someone who is still alive at this point in the story.',
             });
           }
@@ -189,7 +223,10 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
       }
       // World rules: "Forbidden: boat, after the curfew bell"
       if (k === 'forbidden') {
-        const parts = value.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+        const parts = value
+          .split(',')
+          .map((p) => p.trim().toLowerCase())
+          .filter(Boolean);
         for (const s of sentences) {
           const t = s.text.toLowerCase();
           if (parts.length && parts.every((p) => keywords(p).every((w) => t.includes(w)))) {
@@ -210,7 +247,10 @@ function mockContinuity(input: ContinuityInput): ContinuityOutput {
     }
   }
   const dismissed = new Set(input.dismissed.map((d) => d.toLowerCase()));
-  return { issues: issues.filter((i) => !dismissed.has(i.summary.toLowerCase())), notEnoughInformation: input.canon.length + input.references.length === 0 };
+  return {
+    issues: issues.filter((i) => !dismissed.has(i.summary.toLowerCase())),
+    notEnoughInformation: input.canon.length + input.references.length === 0,
+  };
 }
 
 export const continuityCheck: PromptTemplate<ContinuityInput, ContinuityOutput> = {
@@ -228,7 +268,7 @@ export const continuityCheck: PromptTemplate<ContinuityInput, ContinuityOutput> 
     EVIDENCE_RULE,
     'Report only real conflicts between two passages. Differences of style, new information that does not conflict, or deliberate mysteries are not issues.',
     '`confidence` is your probability (0 to 1) that the creator will agree it is a mistake. `severity` is how much it would bother the audience.',
-    '`fixReplacement` is a corrected version of the draftQuote that keeps the creator\'s wording as much as possible; `fixReason` is one sentence.',
+    "`fixReplacement` is a corrected version of the draftQuote that keeps the creator's wording as much as possible; `fixReason` is one sentence.",
     'Do not report anything listed under creator-dismissed issues; the creator marked those as intentional.',
     'If there is nothing to compare against, return no issues and set notEnoughInformation to true.',
   ],
@@ -236,8 +276,15 @@ export const continuityCheck: PromptTemplate<ContinuityInput, ContinuityOutput> 
   data: (i) => [
     { id: i.draft.id, kind: 'draft', label: i.draft.label, text: i.draft.text },
     ...i.canon.map((c) => ({ id: c.id, kind: 'canon-entry', label: c.label, text: c.text })),
-    ...i.references.map((r) => ({ id: r.id, kind: 'earlier-material', label: r.label, text: r.text })),
-    ...(i.dismissed.length ? [{ id: 'dismissed', kind: 'creator-dismissed-issues', text: i.dismissed.join('\n') }] : []),
+    ...i.references.map((r) => ({
+      id: r.id,
+      kind: 'earlier-material',
+      label: r.label,
+      text: r.text,
+    })),
+    ...(i.dismissed.length
+      ? [{ id: 'dismissed', kind: 'creator-dismissed-issues', text: i.dismissed.join('\n') }]
+      : []),
   ],
   mock: mockContinuity,
 };

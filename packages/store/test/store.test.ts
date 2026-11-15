@@ -29,8 +29,18 @@ describe('store', () => {
   it('searches chunks with full-text ranking and stemming', () => {
     const s = open();
     const p = s.createProject({ name: 'P', type: 'video' });
-    s.replaceChunks(p.id, 'canon', 'e1', [{ label: 'Lighthouse', start: 0, end: 10, text: 'The lighthouse keeper climbs the stair', ordinal: 0 }]);
-    s.replaceChunks(p.id, 'canon', 'e2', [{ label: 'Harbour', start: 0, end: 10, text: 'Boats sleep in the harbour', ordinal: 0 }]);
+    s.replaceChunks(p.id, 'canon', 'e1', [
+      {
+        label: 'Lighthouse',
+        start: 0,
+        end: 10,
+        text: 'The lighthouse keeper climbs the stair',
+        ordinal: 0,
+      },
+    ]);
+    s.replaceChunks(p.id, 'canon', 'e2', [
+      { label: 'Harbour', start: 0, end: 10, text: 'Boats sleep in the harbour', ordinal: 0 },
+    ]);
     const hits = s.searchChunks(p.id, 'lighthouses climbing');
     expect(hits[0]?.sourceId).toBe('e1');
     s.replaceChunks(p.id, 'canon', 'e1', []);

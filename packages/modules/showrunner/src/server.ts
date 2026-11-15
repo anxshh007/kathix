@@ -10,7 +10,9 @@ const serverModule: ServerModule<ShowrunnerService> = {
     const needProject = (id: string | undefined) => projectOrScratch(ctx, id).id;
     app.get('/steps', (c) => c.json({ steps: s.availableSteps() }));
     app.get('/runs', (c) => c.json({ runs: s.runs(needProject(c.req.query('projectId'))) }));
-    app.get('/templates', (c) => c.json({ templates: s.templates(needProject(c.req.query('projectId'))) }));
+    app.get('/templates', (c) =>
+      c.json({ templates: s.templates(needProject(c.req.query('projectId'))) }),
+    );
     app.get('/docs', (c) => c.json({ docs: s.docs(needProject(c.req.query('projectId'))) }));
     app.post('/runs', async (c) => {
       const req = await body(

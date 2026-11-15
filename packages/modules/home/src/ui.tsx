@@ -38,10 +38,19 @@ function ProjectDialog({ project, onClose }: { project?: Project; onClose: () =>
   return (
     <Dialog title={project ? 'Rename project' : 'Create a project'} onClose={onClose}>
       <Field label="Name">
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="My series" />
+        <input
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="My series"
+        />
       </Field>
       <Field label="Type" hint="Tunes labels and runtime estimates.">
-        <select className="select" value={type} onChange={(e) => setType(e.target.value as ProjectType)}>
+        <select
+          className="select"
+          value={type}
+          onChange={(e) => setType(e.target.value as ProjectType)}
+        >
           {Object.entries(PROJECT_TYPES).map(([k, v]) => (
             <option key={k} value={k}>
               {v.label}
@@ -55,7 +64,10 @@ function ProjectDialog({ project, onClose }: { project?: Project; onClose: () =>
         onAction={async () => {
           const res = await attempt(() =>
             project
-              ? api.put<{ project: Project }>(`/api/m/home/projects/${project.id}`, { name: name.trim(), type })
+              ? api.put<{ project: Project }>(`/api/m/home/projects/${project.id}`, {
+                  name: name.trim(),
+                  type,
+                })
               : api.post<{ project: Project }>('/api/m/home/projects', { name: name.trim(), type }),
           );
           if (!res) return;
@@ -73,7 +85,10 @@ function ProjectDialog({ project, onClose }: { project?: Project; onClose: () =>
 function Shelf({ onEdit }: { onEdit: (p: Project) => void }) {
   const { projects, project, setProjectId, attempt, reloadProjects, toast, confirm } = useStudio();
   const [showArchived, setShowArchived] = useState(false);
-  const archived = useLoad(() => api.get<{ projects: Project[] }>('/api/m/home/projects?archived=1'), [showArchived, projects.length]);
+  const archived = useLoad(
+    () => api.get<{ projects: Project[] }>('/api/m/home/projects?archived=1'),
+    [showArchived, projects.length],
+  );
   const list = showArchived ? (archived.data?.projects ?? []).filter((p) => p.archived) : projects;
   const setArchived = async (p: Project, value: boolean) => {
     await attempt(() => api.put(`/api/m/home/projects/${p.id}`, { archived: value }));
@@ -89,11 +104,20 @@ function Shelf({ onEdit }: { onEdit: (p: Project) => void }) {
     });
   };
   const remove = async (p: Project) => {
-    const ok = await confirm({ title: `Delete ${p.name}?`, body: 'Its scripts, canon and history will be deleted from this computer.', confirmLabel: 'Delete project', danger: true });
+    const ok = await confirm({
+      title: `Delete ${p.name}?`,
+      body: 'Its scripts, canon and history will be deleted from this computer.',
+      confirmLabel: 'Delete project',
+      danger: true,
+    });
     if (!ok) return;
     let undone = false;
     if (project?.id === p.id) setProjectId(null);
-    toast(`Deleting ${p.name}`, { undo: () => { undone = true; } });
+    toast(`Deleting ${p.name}`, {
+      undo: () => {
+        undone = true;
+      },
+    });
     setTimeout(() => {
       if (undone) return;
       void attempt(() => api.del(`/api/m/home/projects/${p.id}`)).then(async () => {
@@ -133,8 +157,13 @@ function Shelf({ onEdit }: { onEdit: (p: Project) => void }) {
                 <Menu
                   label={`Actions for ${p.name}`}
                   items={[
-                    ...(!p.archived ? [{ label: 'Rename or change type', onSelect: () => onEdit(p) }] : []),
-                    { label: p.archived ? 'Restore' : 'Archive', onSelect: () => setArchived(p, !p.archived) },
+                    ...(!p.archived
+                      ? [{ label: 'Rename or change type', onSelect: () => onEdit(p) }]
+                      : []),
+                    {
+                      label: p.archived ? 'Restore' : 'Archive',
+                      onSelect: () => setArchived(p, !p.archived),
+                    },
                     { label: 'Delete', danger: true, onSelect: () => remove(p) },
                   ]}
                 />
@@ -149,12 +178,17 @@ function Shelf({ onEdit }: { onEdit: (p: Project) => void }) {
 
 function ProjectHome({ projectId }: { projectId: string }) {
   const { state, hasAll, navigate, setProjectId } = useStudio();
-  const ov = useLoad(() => api.get<Overview>(`/api/m/home/projects/${projectId}/overview`), [projectId]);
+  const ov = useLoad(
+    () => api.get<Overview>(`/api/m/home/projects/${projectId}/overview`),
+    [projectId],
+  );
   useServerEvents(['ledger', 'job', 'script', 'showrunner'], () => void ov.reload());
   if (ov.error) return <p role="alert">{ov.error}</p>;
   if (!ov.data) return <Loading />;
   const o = ov.data;
-  const tiles = state.modules.filter((m) => m.id !== 'home' && hasAll(m.requires)).sort((a, b) => a.nav.order - b.nav.order);
+  const tiles = state.modules
+    .filter((m) => m.id !== 'home' && hasAll(m.requires))
+    .sort((a, b) => a.nav.order - b.nav.order);
   return (
     <>
       <PageHeader
@@ -187,13 +221,32 @@ function ProjectHome({ projectId }: { projectId: string }) {
         ))}
       </div>
       <div className="grid two">
-        <Panel title={o.typeInfo.unitPlural} actions={<Button size="small" onClick={() => navigate('/script?new=1')}>New {o.typeInfo.unit.toLowerCase()}</Button>}>
+        <Panel
+          title={o.typeInfo.unitPlural}
+          actions={
+            <Button size="small" onClick={() => navigate('/script?new=1')}>
+              New {o.typeInfo.unit.toLowerCase()}
+            </Button>
+          }
+        >
           {!o.scripts.length ? (
-            <EmptyState title={`No ${o.typeInfo.unitPlural.toLowerCase()} yet`} action={<Button onClick={() => navigate('/script?new=1')}>Write the first one</Button>} />
+            <EmptyState
+              title={`No ${o.typeInfo.unitPlural.toLowerCase()} yet`}
+              action={
+                <Button onClick={() => navigate('/script?new=1')}>Write the first one</Button>
+              }
+            />
           ) : (
             <div className="list">
               {o.scripts.map((s) => (
-                <div key={s.id} className="list-item clickable" onClick={() => navigate(`/script?id=${s.id}`)} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate(`/script?id=${s.id}`)}>
+                <div
+                  key={s.id}
+                  className="list-item clickable"
+                  onClick={() => navigate(`/script?id=${s.id}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/script?id=${s.id}`)}
+                >
                   <div className="stack tight">
                     <strong>{s.title}</strong>
                     <span className="muted small">
@@ -207,7 +260,9 @@ function ProjectHome({ projectId }: { projectId: string }) {
           )}
           <div className="row" style={{ marginTop: 12 }}>
             <Badge>{o.counts.entries} canon entries</Badge>
-            {o.counts.pendingProposals > 0 && <Badge tone="ai">{o.counts.pendingProposals} proposals to review</Badge>}
+            {o.counts.pendingProposals > 0 && (
+              <Badge tone="ai">{o.counts.pendingProposals} proposals to review</Badge>
+            )}
             <Badge>{o.counts.profiles} voice profiles</Badge>
           </div>
         </Panel>
@@ -234,8 +289,13 @@ function ProjectHome({ projectId }: { projectId: string }) {
 
 function Page() {
   const { project, route, navigate, attempt, reloadProjects, setProjectId } = useStudio();
-  const [dialog, setDialog] = useState<{ project?: Project } | null>(route.query.get('new') === '1' ? {} : null);
+  const [dialog, setDialog] = useState<{ project?: Project } | null>(
+    route.query.get('new') === '1' ? {} : null,
+  );
   const sampleRequested = route.query.get('sample') === '1';
+  useEffect(() => {
+    if (route.query.get('new') === '1') setDialog({});
+  }, [route]);
   useEffect(() => {
     if (!sampleRequested) return;
     navigate('/', { replace: true });
@@ -261,7 +321,11 @@ function Page() {
             eyebrow="Kathix"
             title="Studio Home"
             tagline="Open a project to keep your canon, scripts and voice in one place, or use any module on its own."
-            primary={<Button kind="primary" onClick={() => setDialog({})}>Create a project</Button>}
+            primary={
+              <Button kind="primary" onClick={() => setDialog({})}>
+                Create a project
+              </Button>
+            }
             menu={[{ label: 'Open the sample project', onSelect: openSample }]}
           />
           <EmptyState

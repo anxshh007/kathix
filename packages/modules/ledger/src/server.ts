@@ -1,5 +1,10 @@
 import { authorshipShare, fitSpans, spansToRanges } from '@kathix/kernel/shared';
-import { UserError, projectOrScratch, type ModuleContext, type ServerModule } from '@kathix/platform';
+import {
+  UserError,
+  projectOrScratch,
+  type ModuleContext,
+  type ServerModule,
+} from '@kathix/platform';
 import { manifest } from './manifest';
 
 export function createLedgerService(ctx: ModuleContext) {
@@ -38,16 +43,28 @@ export function createLedgerService(ctx: ModuleContext) {
       if (!project) throw new UserError('That project could not be found.', 404);
       const scripts = store.listScripts(projectId).map((s) => {
         const v = store.currentVersion(s.id);
-        return { id: s.id, title: s.title, share: authorshipShare(fitSpans(v?.authorship ?? [], v?.text.length ?? 0)) };
+        return {
+          id: s.id,
+          title: s.title,
+          share: authorshipShare(fitSpans(v?.authorship ?? [], v?.text.length ?? 0)),
+        };
       });
       const total = scripts.reduce(
-        (acc, s) => ({ total: acc.total + s.share.total, human: acc.human + s.share.human, ai: acc.ai + s.share.ai, aiEdited: acc.aiEdited + s.share.aiEdited }),
+        (acc, s) => ({
+          total: acc.total + s.share.total,
+          human: acc.human + s.share.human,
+          ai: acc.ai + s.share.ai,
+          aiEdited: acc.aiEdited + s.share.aiEdited,
+        }),
         { total: 0, human: 0, ai: 0, aiEdited: 0 },
       );
       return {
         project,
         scripts,
-        total: { ...total, humanPercent: total.total ? Math.round((total.human / total.total) * 1000) / 10 : 100 },
+        total: {
+          ...total,
+          humanPercent: total.total ? Math.round((total.human / total.total) * 1000) / 10 : 100,
+        },
         suggestions: suggestionCounts({ projectId }),
         events: store.listLedger({ projectId, limit: 200 }),
       };
@@ -56,12 +73,19 @@ export function createLedgerService(ctx: ModuleContext) {
     disclosure(opts: { projectId?: string; scriptId?: string }): string {
       const now = new Date().toISOString().slice(0, 10);
       const models = new Set<string>();
-      const events = opts.scriptId ? store.listLedger({ scriptId: opts.scriptId, limit: 1000 }) : store.listLedger({ projectId: opts.projectId ?? null, limit: 1000 });
+      const events = opts.scriptId
+        ? store.listLedger({ scriptId: opts.scriptId, limit: 1000 })
+        : store.listLedger({ projectId: opts.projectId ?? null, limit: 1000 });
       for (const e of events) if (e.model) models.add(e.model);
       const lines: string[] = [];
       if (opts.scriptId) {
         const a = service.authorship(opts.scriptId);
-        lines.push(`# AI use disclosure: ${a.script.title}`, '', `Prepared ${now} from the Kathix Provenance Ledger.`, '');
+        lines.push(
+          `# AI use disclosure: ${a.script.title}`,
+          '',
+          `Prepared ${now} from the Kathix Provenance Ledger.`,
+          '',
+        );
         lines.push(
           `- **Written by the creator:** ${a.share.humanPercent}% of the text (${a.share.human} of ${a.share.total} characters).`,
           `- **Suggested by AI and accepted as offered:** ${a.share.total ? Math.round((a.share.ai / a.share.total) * 1000) / 10 : 0}%.`,
@@ -70,10 +94,20 @@ export function createLedgerService(ctx: ModuleContext) {
         );
       } else {
         const p = service.project(opts.projectId as string);
-        lines.push(`# AI use disclosure: ${p.project.name}`, '', `Prepared ${now} from the Kathix Provenance Ledger.`, '');
-        lines.push(`- **Written by the creator across all scripts:** ${p.total.humanPercent}% of the text.`);
-        for (const s of p.scripts) lines.push(`  - ${s.title}: ${s.share.humanPercent}% written by the creator.`);
-        lines.push(`- **AI suggestions:** ${p.suggestions.offered} offered, ${p.suggestions.accepted} accepted, ${p.suggestions.edited} accepted after editing, ${p.suggestions.rejected} rejected.`);
+        lines.push(
+          `# AI use disclosure: ${p.project.name}`,
+          '',
+          `Prepared ${now} from the Kathix Provenance Ledger.`,
+          '',
+        );
+        lines.push(
+          `- **Written by the creator across all scripts:** ${p.total.humanPercent}% of the text.`,
+        );
+        for (const s of p.scripts)
+          lines.push(`  - ${s.title}: ${s.share.humanPercent}% written by the creator.`);
+        lines.push(
+          `- **AI suggestions:** ${p.suggestions.offered} offered, ${p.suggestions.accepted} accepted, ${p.suggestions.edited} accepted after editing, ${p.suggestions.rejected} rejected.`,
+        );
       }
       lines.push(
         `- **Models used:** ${models.size ? [...models].join(', ') : 'none'}.`,
@@ -94,11 +128,18 @@ const serverModule: ServerModule<LedgerService> = {
   createService: createLedgerService,
   routes(app, s, ctx) {
     app.get('/scripts/:id', (c) => c.json(s.authorship(c.req.param('id'))));
-    app.get('/project', (c) => c.json(s.project(projectOrScratch(ctx, c.req.query('projectId')).id)));
+    app.get('/project', (c) =>
+      c.json(s.project(projectOrScratch(ctx, c.req.query('projectId')).id)),
+    );
     app.get('/disclosure.md', (c) => {
       const scriptId = c.req.query('scriptId');
-      const md = scriptId ? s.disclosure({ scriptId }) : s.disclosure({ projectId: projectOrScratch(ctx, c.req.query('projectId')).id });
-      return c.body(md, 200, { 'content-type': 'text/markdown; charset=utf-8', 'content-disposition': 'attachment; filename="ai-disclosure.md"' });
+      const md = scriptId
+        ? s.disclosure({ scriptId })
+        : s.disclosure({ projectId: projectOrScratch(ctx, c.req.query('projectId')).id });
+      return c.body(md, 200, {
+        'content-type': 'text/markdown; charset=utf-8',
+        'content-disposition': 'attachment; filename="ai-disclosure.md"',
+      });
     });
   },
 };

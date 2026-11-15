@@ -95,11 +95,21 @@ export function pickTierModels(models: ModelInfo[]): Record<Tier, string | null>
   return { fast: fast?.id ?? null, balanced: balanced?.id ?? null, deep: deep?.id ?? null };
 }
 
-export const PROVIDER_KINDS: { kind: ProviderKind; label: string; needsKey: boolean; needsBaseUrl: boolean }[] = [
+export const PROVIDER_KINDS: {
+  kind: ProviderKind;
+  label: string;
+  needsKey: boolean;
+  needsBaseUrl: boolean;
+}[] = [
   { kind: 'anthropic', label: 'Anthropic', needsKey: true, needsBaseUrl: false },
   { kind: 'openai', label: 'OpenAI', needsKey: true, needsBaseUrl: false },
   { kind: 'gemini', label: 'Google Gemini', needsKey: true, needsBaseUrl: false },
-  { kind: 'openai-compatible', label: 'OpenAI-compatible endpoint', needsKey: false, needsBaseUrl: true },
+  {
+    kind: 'openai-compatible',
+    label: 'OpenAI-compatible endpoint',
+    needsKey: false,
+    needsBaseUrl: true,
+  },
   { kind: 'ollama', label: 'Local runtime (Ollama)', needsKey: false, needsBaseUrl: false },
 ];
 
@@ -134,14 +144,39 @@ export class ModelRouter {
   private envConfigs(): ProviderConfig[] {
     const e = this.deps.env;
     const out: ProviderConfig[] = [];
-    const add = (c: Omit<ProviderConfig, 'enabled' | 'rpm'>) => out.push({ ...c, enabled: true, rpm: 30 });
-    if (this.deps.mock) add({ id: 'mock', kind: 'mock', label: 'Test provider', keySource: 'none' });
+    const add = (c: Omit<ProviderConfig, 'enabled' | 'rpm'>) =>
+      out.push({ ...c, enabled: true, rpm: 30 });
+    if (this.deps.mock)
+      add({ id: 'mock', kind: 'mock', label: 'Test provider', keySource: 'none' });
     if (e.ANTHROPIC_API_KEY)
-      add({ id: 'anthropic', kind: 'anthropic', label: 'Anthropic', keySource: 'env', envVar: 'ANTHROPIC_API_KEY' });
+      add({
+        id: 'anthropic',
+        kind: 'anthropic',
+        label: 'Anthropic',
+        keySource: 'env',
+        envVar: 'ANTHROPIC_API_KEY',
+      });
     if (e.OPENAI_API_KEY)
-      add({ id: 'openai', kind: 'openai', label: 'OpenAI', keySource: 'env', envVar: 'OPENAI_API_KEY' });
-    const geminiVar = e.GEMINI_API_KEY ? 'GEMINI_API_KEY' : e.GOOGLE_API_KEY ? 'GOOGLE_API_KEY' : null;
-    if (geminiVar) add({ id: 'gemini', kind: 'gemini', label: 'Google Gemini', keySource: 'env', envVar: geminiVar });
+      add({
+        id: 'openai',
+        kind: 'openai',
+        label: 'OpenAI',
+        keySource: 'env',
+        envVar: 'OPENAI_API_KEY',
+      });
+    const geminiVar = e.GEMINI_API_KEY
+      ? 'GEMINI_API_KEY'
+      : e.GOOGLE_API_KEY
+        ? 'GOOGLE_API_KEY'
+        : null;
+    if (geminiVar)
+      add({
+        id: 'gemini',
+        kind: 'gemini',
+        label: 'Google Gemini',
+        keySource: 'env',
+        envVar: geminiVar,
+      });
     if (e.OPENAI_COMPATIBLE_BASE_URL)
       add({
         id: 'compatible',
@@ -161,7 +196,13 @@ export class ModelRouter {
         envVar: 'ADAPTION_API_KEY',
       });
     if (!this.deps.mock)
-      add({ id: 'local', kind: 'ollama', label: 'Local runtime', baseUrl: e.OLLAMA_BASE_URL || DEFAULT_OLLAMA_URL, keySource: 'none' });
+      add({
+        id: 'local',
+        kind: 'ollama',
+        label: 'Local runtime',
+        baseUrl: e.OLLAMA_BASE_URL || DEFAULT_OLLAMA_URL,
+        keySource: 'none',
+      });
     return out;
   }
 
@@ -181,7 +222,9 @@ export class ModelRouter {
       case 'anthropic':
         return key ? new AnthropicAdapter(c.id, key, c.baseUrl) : null;
       case 'openai':
-        return key ? new OpenAIAdapter(c.id, key, c.baseUrl || 'https://api.openai.com/v1', true) : null;
+        return key
+          ? new OpenAIAdapter(c.id, key, c.baseUrl || 'https://api.openai.com/v1', true)
+          : null;
       case 'openai-compatible':
         return c.baseUrl ? new OpenAIAdapter(c.id, key, c.baseUrl, false) : null;
       case 'gemini':
@@ -226,7 +269,12 @@ export class ModelRouter {
     return this.runtimes.get(id)?.adapter ?? null;
   }
 
-  addProvider(input: { kind: ProviderKind; label?: string; baseUrl?: string; apiKey?: string }): string {
+  addProvider(input: {
+    kind: ProviderKind;
+    label?: string;
+    baseUrl?: string;
+    apiKey?: string;
+  }): string {
     const id = `${input.kind}-${shortId().slice(0, 6)}`;
     const meta = PROVIDER_KINDS.find((k) => k.kind === input.kind);
     const config: ProviderConfig = {
@@ -248,7 +296,10 @@ export class ModelRouter {
     const saved = this.savedConfigs();
     if (!saved.some((c) => c.id === id)) return false;
     this.abortProvider(id);
-    this.deps.store.setSetting('router.providers', saved.filter((c) => c.id !== id));
+    this.deps.store.setSetting(
+      'router.providers',
+      saved.filter((c) => c.id !== id),
+    );
     this.deps.secrets.set(`provider.${id}.key`, null);
     this.load();
     return true;
@@ -302,7 +353,11 @@ export class ModelRouter {
   }
 
   get adaptionModel(): string {
-    return this.deps.store.getSetting('router.adaptionModel', '') || this.deps.env.ADAPTION_VOICE_MODEL || '';
+    return (
+      this.deps.store.getSetting('router.adaptionModel', '') ||
+      this.deps.env.ADAPTION_VOICE_MODEL ||
+      ''
+    );
   }
 
   setAdaptionModel(model: string): void {
@@ -342,7 +397,12 @@ export class ModelRouter {
     for (const tier of ['fast', 'balanced', 'deep'] as Tier[]) {
       const valid = (overrides[tier] ?? []).filter((t) => {
         const rt = this.runtimes.get(t.providerId);
-        return rt && rt.config.enabled && rt.models.some((m) => m.id === t.model) && (!localOnly || rt.config.kind === 'ollama');
+        return (
+          rt &&
+          rt.config.enabled &&
+          rt.models.some((m) => m.id === t.model) &&
+          (!localOnly || rt.config.kind === 'ollama')
+        );
       });
       const list = [...valid];
       for (const rt of this.chatRuntimes(true)) {
@@ -388,7 +448,11 @@ export class ModelRouter {
   }
 
   async refreshAll(): Promise<void> {
-    await Promise.all([...this.runtimes.values()].filter((r) => r.config.enabled).map((r) => this.refreshModels(r.config.id)));
+    await Promise.all(
+      [...this.runtimes.values()]
+        .filter((r) => r.config.enabled)
+        .map((r) => this.refreshModels(r.config.id)),
+    );
   }
 
   /** Real one-token call against one provider. */
@@ -398,7 +462,9 @@ export class ModelRouter {
     const models = await this.refreshModels(id);
     if (!models.length) return { ok: false, message: rt.lastError ?? 'No models found.' };
     const model =
-      rt.config.kind === 'adaption' && this.adaptionModel ? this.adaptionModel : pickTierModels(models).fast;
+      rt.config.kind === 'adaption' && this.adaptionModel
+        ? this.adaptionModel
+        : pickTierModels(models).fast;
     if (!model) return { ok: false, message: 'No text models found.' };
     try {
       await rt.adapter.complete({
@@ -412,7 +478,10 @@ export class ModelRouter {
       rt.status = 'ok';
       rt.lastError = null;
       this.changed();
-      return { ok: true, message: `Connected. ${models.filter((m) => m.kind === 'chat').length} models available.` };
+      return {
+        ok: true,
+        message: `Connected. ${models.filter((m) => m.kind === 'chat').length} models available.`,
+      };
     } catch (err) {
       rt.status = 'error';
       rt.lastError = err instanceof Error ? err.message : String(err);
@@ -423,7 +492,9 @@ export class ModelRouter {
 
   async probeText(): Promise<{ ok: boolean; detail: string }> {
     await this.refreshAll();
-    const candidates = this.chatRuntimes(true).filter((rt) => !this.localOnly || rt.config.kind === 'ollama');
+    const candidates = this.chatRuntimes(true).filter(
+      (rt) => !this.localOnly || rt.config.kind === 'ollama',
+    );
     const passed: string[] = [];
     for (const rt of candidates) {
       const r = await this.testProvider(rt.config.id);
@@ -500,11 +571,19 @@ export class ModelRouter {
 
   async probeEmbeddings(): Promise<{ ok: boolean; detail: string }> {
     const target = this.embeddingRuntime();
-    if (!target) return { ok: false, detail: 'No embedding model available; full-text ranking is used.' };
+    if (!target)
+      return { ok: false, detail: 'No embedding model available; full-text ranking is used.' };
     try {
-      const v = await target.rt.adapter?.embed?.(['probe'], target.model, AbortSignal.timeout(30_000));
+      const v = await target.rt.adapter?.embed?.(
+        ['probe'],
+        target.model,
+        AbortSignal.timeout(30_000),
+      );
       if (v && v[0]?.length) {
-        this.deps.store.setSetting('router.embedding', { providerId: target.rt.config.id, model: target.model });
+        this.deps.store.setSetting('router.embedding', {
+          providerId: target.rt.config.id,
+          model: target.model,
+        });
         return { ok: true, detail: `Embeddings via ${target.rt.config.label}` };
       }
     } catch (err) {
@@ -513,7 +592,10 @@ export class ModelRouter {
     return { ok: false, detail: 'Embedding call returned nothing.' };
   }
 
-  async embed(texts: string[], signal?: AbortSignal): Promise<{ vectors: number[][]; model: string } | null> {
+  async embed(
+    texts: string[],
+    signal?: AbortSignal,
+  ): Promise<{ vectors: number[][]; model: string } | null> {
     const target = this.embeddingRuntime();
     if (!target?.rt.adapter?.embed) return null;
     try {
@@ -535,15 +617,21 @@ export class ModelRouter {
 
   async probeAdaption(): Promise<{ ok: boolean; detail: string }> {
     const rt = [...this.runtimes.values()].find((r) => r.config.kind === 'adaption');
-    if (!rt?.adapter || !rt.config.enabled) return { ok: false, detail: 'Adaption credentials are not set.' };
-    if (!this.adaptionModel) return { ok: false, detail: 'Choose your Adaption voice model first.' };
+    if (!rt?.adapter || !rt.config.enabled)
+      return { ok: false, detail: 'Adaption credentials are not set.' };
+    if (!this.adaptionModel)
+      return { ok: false, detail: 'Choose your Adaption voice model first.' };
     const r = await this.testProvider(rt.config.id);
-    return r.ok ? { ok: true, detail: `Voice model ${this.adaptionModel} answers.` } : { ok: false, detail: r.message };
+    return r.ok
+      ? { ok: true, detail: `Voice model ${this.adaptionModel} answers.` }
+      : { ok: false, detail: r.message };
   }
 
   adaptionTarget(): TierTarget | null {
     const rt = [...this.runtimes.values()].find((r) => r.config.kind === 'adaption');
-    return rt && this.adaptionModel ? { providerId: rt.config.id, model: this.adaptionModel } : null;
+    return rt && this.adaptionModel
+      ? { providerId: rt.config.id, model: this.adaptionModel }
+      : null;
   }
 
   // ---------------- generation ----------------
@@ -606,7 +694,9 @@ export class ModelRouter {
     const attempts = this.attempts(opts);
     const log: GenerateResult['attempts'] = [];
     if (!attempts.length) {
-      throw new RouterError('No writing model is connected right now. Open Model Router to connect one.');
+      throw new RouterError(
+        'No writing model is connected right now. Open Model Router to connect one.',
+      );
     }
     for (const target of attempts) {
       const rt = this.runtimes.get(target.providerId);
@@ -639,7 +729,13 @@ export class ModelRouter {
           res = await call(rt.native === true);
         } catch (err) {
           // A schema the provider's native mode rejects falls back to plain JSON instructions.
-          if (opts.json && rt.native === true && err instanceof ProviderError && err.status === 400 && !emitted) {
+          if (
+            opts.json &&
+            rt.native === true &&
+            err instanceof ProviderError &&
+            err.status === 400 &&
+            !emitted
+          ) {
             res = await call(false);
           } else throw err;
         }
@@ -652,25 +748,43 @@ export class ModelRouter {
           tier: opts.tier,
           inputTokens: res.inputTokens,
           outputTokens: res.outputTokens,
-          cost: price ? (res.inputTokens * price.input + res.outputTokens * price.output) / 1_000_000 : null,
+          cost: price
+            ? (res.inputTokens * price.input + res.outputTokens * price.output) / 1_000_000
+            : null,
           cached: false,
         });
         if (useCache && res.text) {
-          this.deps.store.cachePut(key, JSON.stringify({ text: res.text, providerId: target.providerId, model: target.model }));
+          this.deps.store.cachePut(
+            key,
+            JSON.stringify({ text: res.text, providerId: target.providerId, model: target.model }),
+          );
         }
-        return { text: res.text, providerId: target.providerId, model: target.model, inputTokens: res.inputTokens, outputTokens: res.outputTokens, cached: false, attempts: log };
+        return {
+          text: res.text,
+          providerId: target.providerId,
+          model: target.model,
+          inputTokens: res.inputTokens,
+          outputTokens: res.outputTokens,
+          cached: false,
+          attempts: log,
+        };
       } catch (err) {
         if (opts.signal?.aborted) throw err;
         const message = err instanceof Error ? err.message : String(err);
         log.push({ ...target, error: message });
-        this.deps.logger.warn(`Model call failed on ${target.providerId}/${target.model}, trying the next one`, message);
+        this.deps.logger.warn(
+          `Model call failed on ${target.providerId}/${target.model}, trying the next one`,
+          message,
+        );
         if (emitted) opts.onReset?.();
       } finally {
         rt.controllers.delete(controller);
         opts.signal?.removeEventListener('abort', onUserAbort);
       }
     }
-    throw new RouterError('Every connected model failed to answer. Check Model Router and try again.');
+    throw new RouterError(
+      'Every connected model failed to answer. Check Model Router and try again.',
+    );
   }
 }
 

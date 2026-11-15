@@ -69,10 +69,13 @@ export class RateBudget {
     }
     if (this.queue.length && !this.timer) {
       const waitMs = Math.ceil(((1 - this.tokens) / this.rpm) * 60_000);
-      this.timer = setTimeout(() => {
-        this.timer = null;
-        this.drain();
-      }, Math.max(50, waitMs));
+      this.timer = setTimeout(
+        () => {
+          this.timer = null;
+          this.drain();
+        },
+        Math.max(50, waitMs),
+      );
     }
   }
 }

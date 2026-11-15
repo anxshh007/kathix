@@ -217,9 +217,7 @@ export function ftsQuery(text: string): string {
     ),
   );
   const terms = [
-    ...new Set(
-      (text.toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) ?? []).filter((t) => !STOP.has(t)),
-    ),
+    ...new Set((text.toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) ?? []).filter((t) => !STOP.has(t))),
   ].slice(0, 40);
   return terms.map((t) => `"${t.replace(/"/g, '')}"`).join(' OR ');
 }
@@ -356,7 +354,13 @@ export class Store {
         t,
         t,
       );
-      this.saveVersion(id, input.text ?? '', input.authorship ?? null, input.source ?? 'edit', 'Created');
+      this.saveVersion(
+        id,
+        input.text ?? '',
+        input.authorship ?? null,
+        input.source ?? 'edit',
+        'Created',
+      );
     });
     this.touchProject(input.projectId);
     return this.getScript(id) as Script;
@@ -376,7 +380,10 @@ export class Store {
       .map(mapScript);
   }
 
-  updateScript(id: string, patch: Partial<Pick<Script, 'title' | 'episode' | 'archived'>>): Script | null {
+  updateScript(
+    id: string,
+    patch: Partial<Pick<Script, 'title' | 'episode' | 'archived'>>,
+  ): Script | null {
     const cur = this.getScript(id);
     if (!cur) return null;
     const next = { ...cur, ...patch };
@@ -468,7 +475,12 @@ export class Store {
         note,
         t,
       );
-      this.db.run('UPDATE scripts SET current_version_id = ?, updated_at = ? WHERE id = ?', id, t, scriptId);
+      this.db.run(
+        'UPDATE scripts SET current_version_id = ?, updated_at = ? WHERE id = ?',
+        id,
+        t,
+        scriptId,
+      );
       return this.getVersion(id) as ScriptVersion;
     });
   }
@@ -490,18 +502,36 @@ export class Store {
   getDoc(id: string): SourceDoc | null {
     const r = this.db.get('SELECT * FROM source_docs WHERE id = ?', id);
     return r
-      ? { id: s(r.id), projectId: s(r.project_id), title: s(r.title), text: s(r.text), createdAt: s(r.created_at) }
+      ? {
+          id: s(r.id),
+          projectId: s(r.project_id),
+          title: s(r.title),
+          text: s(r.text),
+          createdAt: s(r.created_at),
+        }
       : null;
   }
 
   listDocs(projectId: string): Omit<SourceDoc, 'text'>[] {
     return this.db
-      .all('SELECT id, project_id, title, created_at FROM source_docs WHERE project_id = ? ORDER BY created_at', projectId)
-      .map((r) => ({ id: s(r.id), projectId: s(r.project_id), title: s(r.title), createdAt: s(r.created_at) }));
+      .all(
+        'SELECT id, project_id, title, created_at FROM source_docs WHERE project_id = ? ORDER BY created_at',
+        projectId,
+      )
+      .map((r) => ({
+        id: s(r.id),
+        projectId: s(r.project_id),
+        title: s(r.title),
+        createdAt: s(r.created_at),
+      }));
   }
 
   // ---------- canon ----------
-  createEntry(input: Omit<CanonEntry, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { status?: CanonEntry['status'] }): CanonEntry {
+  createEntry(
+    input: Omit<CanonEntry, 'id' | 'createdAt' | 'updatedAt' | 'status'> & {
+      status?: CanonEntry['status'];
+    },
+  ): CanonEntry {
     const id = shortId();
     const t = now();
     this.db.run(
@@ -538,7 +568,10 @@ export class Store {
 
   listEntries(projectId: string): CanonEntry[] {
     return this.db
-      .all('SELECT * FROM canon_entries WHERE project_id = ? ORDER BY type, name COLLATE NOCASE', projectId)
+      .all(
+        'SELECT * FROM canon_entries WHERE project_id = ? ORDER BY type, name COLLATE NOCASE',
+        projectId,
+      )
       .map(mapEntry);
   }
 
@@ -590,9 +623,14 @@ export class Store {
     );
   }
 
-  entryHistory(entryId: string): { id: string; change: string; snapshot: CanonEntry; createdAt: string }[] {
+  entryHistory(
+    entryId: string,
+  ): { id: string; change: string; snapshot: CanonEntry; createdAt: string }[] {
     return this.db
-      .all('SELECT * FROM canon_history WHERE entry_id = ? ORDER BY created_at DESC, rowid DESC', entryId)
+      .all(
+        'SELECT * FROM canon_history WHERE entry_id = ? ORDER BY created_at DESC, rowid DESC',
+        entryId,
+      )
       .map((r) => ({
         id: s(r.id),
         change: s(r.change),
@@ -638,7 +676,9 @@ export class Store {
     }));
   }
 
-  addProposal(input: Omit<CanonProposal, 'id' | 'createdAt' | 'status' | 'targetEntryId'>): CanonProposal {
+  addProposal(
+    input: Omit<CanonProposal, 'id' | 'createdAt' | 'status' | 'targetEntryId'>,
+  ): CanonProposal {
     const id = shortId();
     this.db.run(
       `INSERT INTO canon_proposals (id, project_id, job_id, type, name, summary, attributes, aliases, related,
@@ -670,19 +710,40 @@ export class Store {
     return r ? mapProposal(r) : null;
   }
 
-  listProposals(projectId: string, status: CanonProposal['status'] | 'all' = 'pending'): CanonProposal[] {
+  listProposals(
+    projectId: string,
+    status: CanonProposal['status'] | 'all' = 'pending',
+  ): CanonProposal[] {
     return status === 'all'
-      ? this.db.all('SELECT * FROM canon_proposals WHERE project_id = ? ORDER BY rowid', projectId).map(mapProposal)
+      ? this.db
+          .all('SELECT * FROM canon_proposals WHERE project_id = ? ORDER BY rowid', projectId)
+          .map(mapProposal)
       : this.db
-          .all('SELECT * FROM canon_proposals WHERE project_id = ? AND status = ? ORDER BY rowid', projectId, status)
+          .all(
+            'SELECT * FROM canon_proposals WHERE project_id = ? AND status = ? ORDER BY rowid',
+            projectId,
+            status,
+          )
           .map(mapProposal);
   }
 
-  setProposalStatus(id: string, status: CanonProposal['status'], targetEntryId: string | null = null): void {
-    this.db.run('UPDATE canon_proposals SET status = ?, target_entry_id = ? WHERE id = ?', status, targetEntryId, id);
+  setProposalStatus(
+    id: string,
+    status: CanonProposal['status'],
+    targetEntryId: string | null = null,
+  ): void {
+    this.db.run(
+      'UPDATE canon_proposals SET status = ?, target_entry_id = ? WHERE id = ?',
+      status,
+      targetEntryId,
+      id,
+    );
   }
 
-  updateProposal(id: string, patch: Partial<Pick<CanonProposal, 'name' | 'summary' | 'type' | 'attributes'>>): CanonProposal | null {
+  updateProposal(
+    id: string,
+    patch: Partial<Pick<CanonProposal, 'name' | 'summary' | 'type' | 'attributes'>>,
+  ): CanonProposal | null {
     const cur = this.getProposal(id);
     if (!cur) return null;
     const next = { ...cur, ...patch };
@@ -698,7 +759,9 @@ export class Store {
   }
 
   // ---------- continuity ----------
-  addIssue(input: Omit<ContinuityIssue, 'id' | 'createdAt' | 'resolvedAt' | 'status'>): ContinuityIssue {
+  addIssue(
+    input: Omit<ContinuityIssue, 'id' | 'createdAt' | 'resolvedAt' | 'status'>,
+  ): ContinuityIssue {
     const id = shortId();
     this.db.run(
       `INSERT INTO continuity_issues (id, project_id, script_id, run_id, type, severity, confidence, summary,
@@ -732,7 +795,11 @@ export class Store {
     return r ? mapIssue(r) : null;
   }
 
-  listIssues(filter: { projectId: string; scriptId?: string; status?: ContinuityIssue['status'] }): ContinuityIssue[] {
+  listIssues(filter: {
+    projectId: string;
+    scriptId?: string;
+    status?: ContinuityIssue['status'];
+  }): ContinuityIssue[] {
     const rows = this.db.all(
       `SELECT * FROM continuity_issues WHERE project_id = ? ${filter.scriptId ? 'AND script_id = ?' : 'AND ? IS NULL'}
        ${filter.status ? 'AND status = ?' : 'AND ? IS NULL'} ORDER BY created_at DESC, rowid`,
@@ -772,7 +839,11 @@ export class Store {
   }
 
   removeDismissal(projectId: string, fingerprint: string): void {
-    this.db.run('DELETE FROM continuity_dismissals WHERE project_id = ? AND fingerprint = ?', projectId, fingerprint);
+    this.db.run(
+      'DELETE FROM continuity_dismissals WHERE project_id = ? AND fingerprint = ?',
+      projectId,
+      fingerprint,
+    );
   }
 
   listDismissals(projectId: string): { fingerprint: string; summary: string }[] {
@@ -781,7 +852,9 @@ export class Store {
       .map((r) => ({ fingerprint: s(r.fingerprint), summary: s(r.summary) }));
   }
 
-  issueHistory(projectId: string): { scriptId: string; runId: string; at: string; open: number; total: number }[] {
+  issueHistory(
+    projectId: string,
+  ): { scriptId: string; runId: string; at: string; open: number; total: number }[] {
     return this.db
       .all(
         `SELECT script_id, run_id, MIN(created_at) AS at, SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS open,
@@ -831,11 +904,17 @@ export class Store {
 
   listProfiles(projectId: string): VoiceProfile[] {
     return this.db
-      .all<{ id: string }>('SELECT id FROM voice_profiles WHERE project_id = ? ORDER BY created_at', projectId)
+      .all<{ id: string }>(
+        'SELECT id FROM voice_profiles WHERE project_id = ? ORDER BY created_at',
+        projectId,
+      )
       .map((r) => this.getProfile(r.id) as VoiceProfile);
   }
 
-  updateProfile(id: string, patch: Partial<Pick<VoiceProfile, 'name' | 'metrics' | 'description' | 'traits'>>): VoiceProfile | null {
+  updateProfile(
+    id: string,
+    patch: Partial<Pick<VoiceProfile, 'name' | 'metrics' | 'description' | 'traits'>>,
+  ): VoiceProfile | null {
     const cur = this.getProfile(id);
     if (!cur) return null;
     const next = { ...cur, ...patch };
@@ -887,7 +966,12 @@ export class Store {
   }
 
   // ---------- suggestions ----------
-  addSuggestion(input: Omit<Suggestion, 'id' | 'createdAt' | 'decidedAt' | 'status' | 'rejectReason' | 'finalText'>): Suggestion {
+  addSuggestion(
+    input: Omit<
+      Suggestion,
+      'id' | 'createdAt' | 'decidedAt' | 'status' | 'rejectReason' | 'finalText'
+    >,
+  ): Suggestion {
     const id = shortId();
     this.db.run(
       `INSERT INTO suggestions (id, project_id, script_id, module, action, provider, model, original_text, proposed_text,
@@ -915,7 +999,11 @@ export class Store {
     return r ? mapSuggestion(r) : null;
   }
 
-  listSuggestions(filter: { scriptId?: string; projectId?: string; status?: Suggestion['status'] }): Suggestion[] {
+  listSuggestions(filter: {
+    scriptId?: string;
+    projectId?: string;
+    status?: Suggestion['status'];
+  }): Suggestion[] {
     return this.db
       .all(
         `SELECT * FROM suggestions WHERE (? IS NULL OR script_id = ?) AND (? IS NULL OR project_id = ?)
@@ -930,7 +1018,12 @@ export class Store {
       .map(mapSuggestion);
   }
 
-  decideSuggestion(id: string, status: Suggestion['status'], finalText: string, rejectReason = ''): Suggestion | null {
+  decideSuggestion(
+    id: string,
+    status: Suggestion['status'],
+    finalText: string,
+    rejectReason = '',
+  ): Suggestion | null {
     this.db.run(
       'UPDATE suggestions SET status = ?, final_text = ?, reject_reason = ?, decided_at = ? WHERE id = ?',
       status,
@@ -962,7 +1055,11 @@ export class Store {
     return mapLedger(this.db.get('SELECT * FROM ledger_events WHERE id = ?', id) as Row);
   }
 
-  listLedger(filter: { projectId?: string | null; scriptId?: string; limit?: number }): LedgerEvent[] {
+  listLedger(filter: {
+    projectId?: string | null;
+    scriptId?: string;
+    limit?: number;
+  }): LedgerEvent[] {
     return this.db
       .all(
         `SELECT * FROM ledger_events WHERE (? IS NULL OR project_id = ?) AND (? IS NULL OR script_id = ?)
@@ -1020,9 +1117,15 @@ export class Store {
     },
     listByStatus: (statuses) =>
       this.db
-        .all(`SELECT * FROM jobs WHERE status IN (${statuses.map(() => '?').join(',')}) ORDER BY created_at`, ...statuses)
+        .all(
+          `SELECT * FROM jobs WHERE status IN (${statuses.map(() => '?').join(',')}) ORDER BY created_at`,
+          ...statuses,
+        )
         .map(mapJob),
-    list: (limit = 30) => this.db.all('SELECT * FROM jobs ORDER BY created_at DESC, rowid DESC LIMIT ?', limit).map(mapJob),
+    list: (limit = 30) =>
+      this.db
+        .all('SELECT * FROM jobs ORDER BY created_at DESC, rowid DESC LIMIT ?', limit)
+        .map(mapJob),
   };
 
   // ---------- usage & cache ----------
@@ -1044,9 +1147,28 @@ export class Store {
   }
 
   usageSummary(): {
-    byModule: { module: string; calls: number; inputTokens: number; outputTokens: number; cost: number | null; cached: number }[];
-    byDay: { day: string; calls: number; inputTokens: number; outputTokens: number; cost: number | null }[];
-    byProvider: { provider: string; model: string; calls: number; inputTokens: number; outputTokens: number }[];
+    byModule: {
+      module: string;
+      calls: number;
+      inputTokens: number;
+      outputTokens: number;
+      cost: number | null;
+      cached: number;
+    }[];
+    byDay: {
+      day: string;
+      calls: number;
+      inputTokens: number;
+      outputTokens: number;
+      cost: number | null;
+    }[];
+    byProvider: {
+      provider: string;
+      model: string;
+      calls: number;
+      inputTokens: number;
+      outputTokens: number;
+    }[];
   } {
     const mapAgg = (r: Row) => ({
       calls: Number(r.calls),
@@ -1083,7 +1205,10 @@ export class Store {
   }
 
   cacheGet(key: string): string | null {
-    return this.db.get<{ value: string }>('SELECT value FROM response_cache WHERE key = ?', key)?.value ?? null;
+    return (
+      this.db.get<{ value: string }>('SELECT value FROM response_cache WHERE key = ?', key)
+        ?.value ?? null
+    );
   }
 
   cachePut(key: string, value: string): void {
@@ -1096,7 +1221,9 @@ export class Store {
   }
 
   // ---------- showrunner runs ----------
-  createRun(input: Pick<ShowrunnerRun, 'projectId' | 'scriptId' | 'goal' | 'outline' | 'templateName'>): ShowrunnerRun {
+  createRun(
+    input: Pick<ShowrunnerRun, 'projectId' | 'scriptId' | 'goal' | 'outline' | 'templateName'>,
+  ): ShowrunnerRun {
     const id = shortId();
     const t = now();
     this.db.run(
@@ -1121,7 +1248,10 @@ export class Store {
 
   listRuns(projectId: string): ShowrunnerRun[] {
     return this.db
-      .all('SELECT * FROM showrunner_runs WHERE project_id = ? ORDER BY started_at DESC, rowid DESC', projectId)
+      .all(
+        'SELECT * FROM showrunner_runs WHERE project_id = ? ORDER BY started_at DESC, rowid DESC',
+        projectId,
+      )
       .map(mapRun);
   }
 
@@ -1181,7 +1311,10 @@ export class Store {
       : null;
   }
 
-  listForgeItems(projectId: string, opts: { shortlistedOnly?: boolean; scriptId?: string } = {}): ForgeItem[] {
+  listForgeItems(
+    projectId: string,
+    opts: { shortlistedOnly?: boolean; scriptId?: string } = {},
+  ): ForgeItem[] {
     return this.db
       .all<{ id: string }>(
         `SELECT id FROM forge_items WHERE project_id = ? ${opts.shortlistedOnly ? 'AND shortlisted = 1' : ''}
@@ -1212,7 +1345,11 @@ export class Store {
       )) {
         this.db.run('DELETE FROM chunks_fts WHERE chunk_id = ?', c.id);
       }
-      this.db.run('DELETE FROM chunks WHERE source_kind = ? AND source_id = ?', sourceKind, sourceId);
+      this.db.run(
+        'DELETE FROM chunks WHERE source_kind = ? AND source_id = ?',
+        sourceKind,
+        sourceId,
+      );
       const t = now();
       for (const c of chunks) {
         const id = shortId();
@@ -1242,7 +1379,10 @@ export class Store {
     });
   }
 
-  listChunks(projectId: string, opts: { sourceKind?: Chunk['sourceKind']; sourceId?: string } = {}): Chunk[] {
+  listChunks(
+    projectId: string,
+    opts: { sourceKind?: Chunk['sourceKind']; sourceId?: string } = {},
+  ): Chunk[] {
     return this.db
       .all(
         `SELECT * FROM chunks WHERE project_id = ? AND (? IS NULL OR source_kind = ?) AND (? IS NULL OR source_id = ?)
@@ -1261,11 +1401,15 @@ export class Store {
   }
 
   /** Full-text search; lower `rank` is better (bm25). */
-  searchChunks(projectId: string, query: string, limit = 30): (Chunk & { rank: number; snippet: string })[] {
+  searchChunks(
+    projectId: string,
+    query: string,
+    limit = 30,
+  ): (Chunk & { rank: number; snippet: string })[] {
     const q = ftsQuery(query);
     if (!q) return [];
     const rows = this.db.all(
-      `SELECT c.*, bm25(chunks_fts) AS rank, snippet(chunks_fts, 0, '\u0001', '\u0002', '…', 14) AS snip
+      `SELECT c.*, bm25(chunks_fts) AS rank, snippet(chunks_fts, 0, '', '', '…', 14) AS snip
        FROM chunks_fts JOIN chunks c ON c.id = chunks_fts.chunk_id
        WHERE chunks_fts MATCH ? AND chunks_fts.project_id = ? ORDER BY rank LIMIT ?`,
       q,

@@ -10,7 +10,10 @@ export class GeminiAdapter implements ProviderAdapter {
     private apiKey: string,
     baseUrl?: string,
   ) {
-    this.baseUrl = (baseUrl || 'https://generativelanguage.googleapis.com/v1beta').replace(/\/+$/, '');
+    this.baseUrl = (baseUrl || 'https://generativelanguage.googleapis.com/v1beta').replace(
+      /\/+$/,
+      '',
+    );
   }
 
   private headers() {
@@ -53,7 +56,10 @@ export class GeminiAdapter implements ProviderAdapter {
       ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
       contents: req.messages
         .filter((m) => m.role !== 'system')
-        .map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        })),
       generationConfig,
     };
     const res = await httpJson(
@@ -91,7 +97,10 @@ export class GeminiAdapter implements ProviderAdapter {
         method: 'POST',
         headers: this.headers(),
         body: JSON.stringify({
-          requests: texts.map((t) => ({ model: `models/${model}`, content: { parts: [{ text: t }] } })),
+          requests: texts.map((t) => ({
+            model: `models/${model}`,
+            content: { parts: [{ text: t }] },
+          })),
         }),
         signal,
       },

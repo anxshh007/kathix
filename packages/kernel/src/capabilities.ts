@@ -71,7 +71,11 @@ export class CapabilityRegistry {
         } catch (err) {
           res = { ok: false, detail: err instanceof Error ? err.message : String(err) };
         }
-        this.state[cap] = { available: res.ok, detail: res.detail, checkedAt: new Date().toISOString() };
+        this.state[cap] = {
+          available: res.ok,
+          detail: res.detail,
+          checkedAt: new Date().toISOString(),
+        };
       }
       const after = JSON.stringify(Object.values(this.state).map((s) => s.available));
       if (before !== after) this.notify();

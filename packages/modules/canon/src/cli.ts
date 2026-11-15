@@ -5,16 +5,21 @@ import type { CanonService } from './service';
 
 const cli: CliModule = {
   register(program, getContext) {
-    const cmd = program.command('canon').description('Import material, review proposals and export the story bible');
+    const cmd = program
+      .command('canon')
+      .description('Import material, review proposals and export the story bible');
     const service = async () => {
       const ctx = await getContext();
       return { ctx, s: ctx.use<CanonService>('canon') as CanonService };
     };
-    const projectOf = (ctx: Awaited<ReturnType<typeof getContext>>, id?: string) => (id ? id : ctx.store.scratchProject().id);
+    const projectOf = (ctx: Awaited<ReturnType<typeof getContext>>, id?: string) =>
+      id ? id : ctx.store.scratchProject().id;
 
     cmd
       .command('import <file>')
-      .description('Read a .txt, .md, .docx or .pdf file and propose canon entries (no --project: the Scratchpad vault)')
+      .description(
+        'Read a .txt, .md, .docx or .pdf file and propose canon entries (no --project: the Scratchpad vault)',
+      )
       .option('--project <id>', 'project id')
       .option('--title <title>', 'document title')
       .action(async (file: string, o: { project?: string; title?: string }) => {
@@ -23,7 +28,11 @@ const cli: CliModule = {
         const name = path.basename(file);
         const isText = /\.(txt|md)$/i.test(name);
         const projectId = projectOf(ctx, o.project);
-        const { job } = await s.importText(projectId, o.title ?? name, isText ? { name, text: buf.toString('utf8') } : { name, base64: buf.toString('base64') });
+        const { job } = await s.importText(
+          projectId,
+          o.title ?? name,
+          isText ? { name, text: buf.toString('utf8') } : { name, base64: buf.toString('base64') },
+        );
         const done = await ctx.jobs.wait(job.id, 600_000);
         if (done.status !== 'succeeded') {
           console.error(done.error ?? 'Import failed');
@@ -32,7 +41,8 @@ const cli: CliModule = {
         }
         const props = s.proposals(projectId);
         console.log(`${props.length} proposals waiting for review:`);
-        for (const p of props) console.log(`  ${p.id}  [${p.type}] ${p.name}\n      “${p.quote.slice(0, 120)}”`);
+        for (const p of props)
+          console.log(`  ${p.id}  [${p.type}] ${p.name}\n      “${p.quote.slice(0, 120)}”`);
       });
     cmd
       .command('proposals')
@@ -40,7 +50,8 @@ const cli: CliModule = {
       .option('--project <id>', 'project id')
       .action(async (o: { project?: string }) => {
         const { ctx, s } = await service();
-        for (const p of s.proposals(projectOf(ctx, o.project))) console.log(`${p.id}  [${p.type}] ${p.name}: “${p.quote.slice(0, 140)}”`);
+        for (const p of s.proposals(projectOf(ctx, o.project)))
+          console.log(`${p.id}  [${p.type}] ${p.name}: “${p.quote.slice(0, 140)}”`);
       });
     cmd
       .command('approve <proposalId>')
@@ -66,7 +77,8 @@ const cli: CliModule = {
       .action(async (o: { project?: string; format: string; out?: string }) => {
         const { ctx, s } = await service();
         const pid = projectOf(ctx, o.project);
-        const content = o.format === 'json' ? JSON.stringify(s.exportJson(pid), null, 2) : s.exportMarkdown(pid);
+        const content =
+          o.format === 'json' ? JSON.stringify(s.exportJson(pid), null, 2) : s.exportMarkdown(pid);
         if (o.out) {
           writeFileSync(o.out, content);
           console.log(`Wrote ${o.out}`);

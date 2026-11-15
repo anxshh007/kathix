@@ -59,13 +59,18 @@ function mockExtract(input: CanonExtractInput): CanonExtractOutput {
     if (entries.some((e) => e.name.includes(name) || name.includes(e.name))) continue;
     const sentence = sentences.find((s) => s.text.includes(name));
     if (!sentence) continue;
-    const isSpeaker = [...speakers].some((s) => s.toLowerCase() === name.split(' ')[0]?.toLowerCase());
-    const placeWords = /(Harbou?r|Street|Tower|Island|Market|Lighthouse|Quay|Bay|Hill|Hall|Inn|House|Point|Rock|Cove)/;
+    const isSpeaker = [...speakers].some(
+      (s) => s.toLowerCase() === name.split(' ')[0]?.toLowerCase(),
+    );
+    const placeWords =
+      /(Harbou?r|Street|Tower|Island|Market|Lighthouse|Quay|Bay|Hill|Hall|Inn|House|Point|Rock|Cove)/;
     const type: CanonType = isSpeaker ? 'character' : placeWords.test(name) ? 'place' : 'character';
     entries.push({
       type,
       name,
-      summary: existing.has(name.toLowerCase()) ? `Mentioned again in ${input.title}.` : `Appears in ${input.title}.`,
+      summary: existing.has(name.toLowerCase())
+        ? `Mentioned again in ${input.title}.`
+        : `Appears in ${input.title}.`,
       attributes: [],
       aliases: [],
       quote: sentence.text,
@@ -83,7 +88,7 @@ export const canonExtract: PromptTemplate<CanonExtractInput, CanonExtractOutput>
   tier: 'balanced',
   temperature: 0.2,
   maxTokens: 6000,
-  role: "You are a meticulous story-bible editor helping a creator catalogue the canon of their own serialized work.",
+  role: 'You are a meticulous story-bible editor helping a creator catalogue the canon of their own serialized work.',
   task: (i) =>
     `Read the ${i.projectType} material titled "${i.title}" and propose canon entries: characters, places, objects, factions, rules of the world, facts, timeline events, running gags, and open promises to the audience (setups not yet paid off).`,
   rules: [
