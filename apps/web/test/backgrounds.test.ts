@@ -34,9 +34,11 @@ const hex = (name: string) => {
 
 /** The scrim stops, read straight from the stylesheet so the test tracks the real CSS. */
 function scrimStops(): { at: number; alpha: number; rgb: [number, number, number] }[] {
+  const rule = /\.bg-scrim \{([^}]*)\}/.exec(css)?.[1] ?? '';
   const block =
-    /\.bg-scrim \{[\s\S]*?linear-gradient\(180deg,([^;]*?)\),\s*\n/.exec(css)?.[1] ?? '';
-  return [...block.matchAll(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\) (\d+)%/g)].map((m) => ({
+    /linear-gradient\(\s*180deg,([\s\S]*?)\)\s*,/.exec(rule.replace(/\)\s*(\d+%)/g, ') $1'))?.[1] ??
+    '';
+  return [...block.matchAll(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)\s*(\d+)%/g)].map((m) => ({
     rgb: [Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number],
     alpha: Number(m[4]),
     at: Number(m[5]) / 100,

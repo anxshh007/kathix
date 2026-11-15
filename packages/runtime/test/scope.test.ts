@@ -18,15 +18,17 @@ function files(dir: string): string[] {
 
 describe('round 1 scope', () => {
   it('has no trace of the finale modules in code or UI', () => {
-    const hits = [...files(path.join(ROOT, 'packages')), ...files(path.join(ROOT, 'apps')), path.join(ROOT, 'modules.config.json')].filter((f) =>
-      FINALE.test(readFileSync(f, 'utf8')),
-    );
+    const hits = [
+      ...files(path.join(ROOT, 'packages')),
+      ...files(path.join(ROOT, 'apps')),
+      path.join(ROOT, 'modules.config.json'),
+    ].filter((f) => FINALE.test(readFileSync(f, 'utf8')));
     expect(hits.map((h) => path.relative(ROOT, h))).toEqual([]);
   });
 
   it('ships no stubs, placeholders or commented-out work markers', () => {
-    const hits = [...files(path.join(ROOT, 'packages')), ...files(path.join(ROOT, 'apps'))].filter((f) =>
-      /\b(TODO|FIXME|XXX|coming soon|not implemented)\b/i.test(readFileSync(f, 'utf8')),
+    const hits = [...files(path.join(ROOT, 'packages')), ...files(path.join(ROOT, 'apps'))].filter(
+      (f) => /\b(TODO|FIXME|XXX|coming soon|not implemented)\b/i.test(readFileSync(f, 'utf8')),
     );
     expect(hits.map((h) => path.relative(ROOT, h))).toEqual([]);
   });

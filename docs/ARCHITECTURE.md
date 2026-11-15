@@ -4,26 +4,41 @@ Kathix is a local-first web application in a TypeScript monorepo. A shared kerne
 
 ## Packages
 
-| Package | Responsibility |
-| --- | --- |
-| `apps/web` | The Studio: a Vite + React client and a Node HTTP server. `/api/*` goes to the Hono app; everything else is the built client, or Vite middleware in dev. All model calls happen on the server. |
-| `apps/cli` | The `kathix` command. It loads every module's `cli.ts` from the registry, so each module works headless. |
-| `packages/kernel` | Capability registry with ordered real probes, typed event bus, persisted job queue (priorities, checkpoints, resume, cancel, retry), configuration, key-redacting logger, and an AES-256-GCM encrypted settings file. Its `shared/` subpath is browser-safe: types, authorship spans, text utilities, script format and the canon block renderer. |
-| `packages/store` | `node:sqlite` wrapper, migrations, typed repositories and the FTS5 chunk index. |
-| `packages/models` | Model Router: provider adapters (Anthropic SDK; OpenAI and OpenAI-compatible, Gemini, Ollama and Adaption over `fetch`; a deterministic test provider), rate budgets with a priority queue, prompt-hash response cache, failover, usage records, probes and live model lists. |
-| `packages/prompts` | One file per task. Each template has a version, tier, temperature, zod schema, data-block builder and deterministic test answer. Also holds `runTemplate` (validation, retry, failover), the evidence verifier, and evals. |
-| `packages/retrieval` | Scene chunking, FTS5 ranking, optional embeddings, recency and relationship boosts, and the token budgeter. |
-| `packages/platform` | The module contract (`ServerModule`, `CliModule`, `AgentStep`, cross-module APIs), script edit helpers that keep authorship and versions, the SSE helper and plain-language errors. |
-| `packages/runtime` | Assembles kernel, store, router, probes and modules, and builds the Hono app with core routes (`/api/state`, `/api/events`, `/api/jobs`). |
-| `packages/ui` | Design tokens and stylesheet, shared components (suggestion card, diff view, evidence list, menus, dialogs, background system), the API client and the Studio context (routing, toasts, undo, confirmations, live events). |
-| `packages/modules/*` | `home`, `canon`, `script`, `continuity`, `voice`, `forge`, `showrunner`, `ledger`, `router`. Each has `manifest.ts`, `server.ts` (service, routes and agent steps), `ui.tsx` and `cli.ts`. |
+| Package              | Responsibility                                                                                                                                                                                                                                                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`           | The Studio: a Vite + React client and a Node HTTP server. `/api/*` goes to the Hono app; everything else is the built client, or Vite middleware in dev. All model calls happen on the server.                                                                                                                                                    |
+| `apps/cli`           | The `kathix` command. It loads every module's `cli.ts` from the registry, so each module works headless.                                                                                                                                                                                                                                          |
+| `packages/kernel`    | Capability registry with ordered real probes, typed event bus, persisted job queue (priorities, checkpoints, resume, cancel, retry), configuration, key-redacting logger, and an AES-256-GCM encrypted settings file. Its `shared/` subpath is browser-safe: types, authorship spans, text utilities, script format and the canon block renderer. |
+| `packages/store`     | `node:sqlite` wrapper, migrations, typed repositories and the FTS5 chunk index.                                                                                                                                                                                                                                                                   |
+| `packages/models`    | Model Router: provider adapters (Anthropic SDK; OpenAI and OpenAI-compatible, Gemini, Ollama and Adaption over `fetch`; a deterministic test provider), rate budgets with a priority queue, prompt-hash response cache, failover, usage records, probes and live model lists.                                                                     |
+| `packages/prompts`   | One file per task. Each template has a version, tier, temperature, zod schema, data-block builder and deterministic test answer. Also holds `runTemplate` (validation, retry, failover), the evidence verifier, and evals.                                                                                                                        |
+| `packages/retrieval` | Scene chunking, FTS5 ranking, optional embeddings, recency and relationship boosts, and the token budgeter.                                                                                                                                                                                                                                       |
+| `packages/platform`  | The module contract (`ServerModule`, `CliModule`, `AgentStep`, cross-module APIs), script edit helpers that keep authorship and versions, the SSE helper and plain-language errors.                                                                                                                                                               |
+| `packages/runtime`   | Assembles kernel, store, router, probes and modules, and builds the Hono app with core routes (`/api/state`, `/api/events`, `/api/jobs`).                                                                                                                                                                                                         |
+| `packages/ui`        | Design tokens and stylesheet, shared components (suggestion card, diff view, evidence list, menus, dialogs, background system), the API client and the Studio context (routing, toasts, undo, confirmations, live events).                                                                                                                        |
+| `packages/modules/*` | `home`, `canon`, `script`, `continuity`, `voice`, `forge`, `showrunner`, `ledger`, `router`. Each has `manifest.ts`, `server.ts` (service, routes and agent steps), `ui.tsx` and `cli.ts`.                                                                                                                                                        |
 
 ## Module contract
 
 ```ts
-interface ModuleManifest { id; title; tagline; requires: Capability[]; nav; cli; actions: PaletteAction[] }
-interface ServerModule<S> { manifest; createService(ctx): S; routes?(app, service, ctx); agentSteps?(service, ctx): AgentStep[] }
-interface CliModule { register(program, getContext) }
+interface ModuleManifest {
+  id;
+  title;
+  tagline;
+  requires: Capability[];
+  nav;
+  cli;
+  actions: PaletteAction[];
+}
+interface ServerModule<S> {
+  manifest;
+  createService(ctx): S;
+  routes?(app, service, ctx);
+  agentSteps?(service, ctx): AgentStep[];
+}
+interface CliModule {
+  register(program, getContext);
+}
 ```
 
 - `modules.config.json` is the single registry. The server and CLI import each module by path, and the client finds pages with `import.meta.glob`.
@@ -42,14 +57,14 @@ Tables: `projects`, `scripts`, `script_versions` (text and authorship spans), `s
 
 ## Capability gating
 
-| Capability | Probe |
-| --- | --- |
-| `store.ready` | Migrations applied and a real write succeeds |
-| `model.local` | Ollama answers at its default address with at least one model |
-| `model.text` | A short completion succeeds on at least one enabled provider |
-| `model.structured` | A schema-constrained call returns valid JSON (native mode tried first) |
-| `model.embeddings` | An embedding call succeeds |
-| `model.custom.adaption` | Adaption key set, voice model chosen, and a real call succeeds |
+| Capability              | Probe                                                                  |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `store.ready`           | Migrations applied and a real write succeeds                           |
+| `model.local`           | Ollama answers at its default address with at least one model          |
+| `model.text`            | A short completion succeeds on at least one enabled provider           |
+| `model.structured`      | A schema-constrained call returns valid JSON (native mode tried first) |
+| `model.embeddings`      | An embedding call succeeds                                             |
+| `model.custom.adaption` | Adaption key set, voice model chosen, and a real call succeeds         |
 
 The client renders navigation, buttons, palette actions and module controls only when their capabilities are present. When a capability drops, the server's change event makes the client re-read state, and affected controls disappear. A failed job shows its plain-language error with a retry button in the jobs tray. Without `model.text`, only the setup screen is shown. Embeddings degrade silently: without them, retrieval uses FTS ranking alone.
 

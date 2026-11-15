@@ -488,6 +488,7 @@ function StudioView({ id }: { id: string }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savePromise = useRef<Promise<void> | null>(null);
   const project = detail.data?.project;
 
@@ -530,7 +531,7 @@ function StudioView({ id }: { id: string }) {
     if (detail.data) setStats(detail.data.stats);
   }, [detail.data]);
 
-  const onChange = (text: string) => {
+  const onChange = () => {
     setSaveState('unsaved');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -539,13 +540,18 @@ function StudioView({ id }: { id: string }) {
     }, 700);
     if (statsTimer.current) clearTimeout(statsTimer.current);
     statsTimer.current = setTimeout(
-      () => project && setStats(scriptStats(text, project.type)),
+      () =>
+        project &&
+        handle.current &&
+        setStats(scriptStats(handle.current.view.state.doc.toString(), project.type)),
       400,
     );
   };
 
+  // Selection state and canon context update shortly after the cursor settles, not on every keystroke.
   const onSelection = (from: number, to: number) => {
-    setSelection({ from, to });
+    if (selTimer.current) clearTimeout(selTimer.current);
+    selTimer.current = setTimeout(() => setSelection({ from, to }), 120);
     if (ctxTimer.current) clearTimeout(ctxTimer.current);
     ctxTimer.current = setTimeout(async () => {
       await flush();

@@ -119,7 +119,8 @@ export function ScriptEditor({
   initialText: string;
   initialSpans: AuthorSpan[];
   showAi: boolean;
-  onChange: (text: string) => void;
+  /** Called after every edit; read the text from the handle when needed. */
+  onChange: () => void;
   onSelection: (from: number, to: number) => void;
   onReady: (h: EditorHandle) => void;
 }) {
@@ -145,7 +146,7 @@ export function ScriptEditor({
             spans = applyAuthorChange(spans, fromA, toA, len, 'human');
           spansRef.current = spans;
         }
-        handlers.current.onChange(u.state.doc.toString());
+        handlers.current.onChange();
       }
       if (u.selectionSet || u.docChanged) {
         const sel = u.state.selection.main;
@@ -160,7 +161,12 @@ export function ScriptEditor({
       aiField,
       flashField,
       tracker,
-      EditorView.contentAttributes.of({ 'aria-label': 'Script text', spellcheck: 'true' }),
+      // Browser spellcheck re-scans the editable region on every keystroke; on very long
+      // scripts that costs hundreds of milliseconds, so it is kept for normal-length ones.
+      EditorView.contentAttributes.of({
+        'aria-label': 'Script text',
+        spellcheck: initialText.length < 40_000 ? 'true' : 'false',
+      }),
     ];
     const view = new EditorView({
       state: EditorState.create({ doc: initialText, extensions }),

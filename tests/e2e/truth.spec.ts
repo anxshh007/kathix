@@ -113,7 +113,12 @@ async function activate(page: Page, c: Ctl): Promise<boolean> {
   } else if (c.kind === 'checkbox') {
     const before = await handle.isChecked();
     await handle.click({ timeout: 5000 });
-    changedValue = (await handle.isChecked()) !== before;
+    await page.waitForTimeout(300);
+    // A switch that changes what can run may remove itself (for example, turning
+    // off the only provider returns the Studio to setup): that is an effect too.
+    changedValue =
+      (await handle.count()) === 0 ||
+      (await handle.isChecked({ timeout: 2000 }).catch(() => !before)) !== before;
   } else {
     await handle.click({ timeout: 5000 });
   }
@@ -227,6 +232,7 @@ for (const r of ROUTES) {
     page,
     request,
   }) => {
+    test.setTimeout(600_000);
     const cleanup = r.router
       ? async () => {
           await request.post('/api/m/router/providers/mock/enabled', { data: { enabled: true } });

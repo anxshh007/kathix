@@ -27,16 +27,16 @@ Kathix is a local-first studio with eight modules that share one memory of your 
 
 ## What is built (Round 1)
 
-| Module | What you can do |
-| --- | --- |
-| **Studio Home** | Create, rename, archive and open projects (video series, podcast, fiction, comic). Get one next best action computed from project state. Launch any available module, read the activity timeline, and use the global command palette and search (Ctrl/⌘+K). |
-| **Canon Vault** | Paste or upload `.txt`, `.md`, `.docx` or text-based `.pdf`. The AI proposes entries in 9 types, and each proposal shows its verbatim source passage. Approve, edit, merge, reject (with undo) or bulk-approve by type. Entry pages show relationships, every script mention and change history. Also: in-world timeline, relationship graph, open-promises tracker, and Markdown/JSON export. |
-| **Script Studio** | CodeMirror editor that styles scene headings, speaker labels and notes. Autosaves every change, and counts words, scenes and runtime. Co-writer actions: continue, rewrite, tighten, expand, change tone, three alternatives, punch up dialogue, and free-form instruction. Results stream into suggestion cards (diff, reason, clickable evidence) that you accept, edit then accept, or reject with a reason. A canon side panel follows the cursor. Coach mode asks questions and writes nothing. Version history with visual compare and restore. Export to Markdown, plain text and Word. |
-| **Continuity Guard** | Checks a script against the vault and earlier episodes for six issue types. Shows both passages side by side, with severity, confidence and a proposed fix. You can apply the fix, edit the canon instead, or mark the issue intentional, which is remembered forever. Optional background check on save, plus a project health view. Standalone two-box mode. |
-| **Voice Mirror** | Sample intake with an ownership confirmation. A voice profile measured in code: sentence-length distribution, vocabulary richness, signature phrases, punctuation, point of view, reading level, pacing and function-word fingerprint, with a short AI description on top. Line-level drift report with suggested rewrites. Several profiles per project. JSONL training-dataset export. Uses your Adaption voice model when one is connected. |
-| **Hook and Title Forge** | Generates hooks, titles, thumbnail text and one-line descriptions for 5 platforms. Length limits are enforced in code and never exceeded. Every option is scored on clarity, curiosity, honesty and voice match, each with a reason. Clickbait is flagged with the missing payoff named. Shortlist, compare side by side, refine with a note, copy and export. |
-| **Showrunner** | You state a goal, and the agent plans only from modules that can run right now. It drafts from the outline, checks continuity and voice, proposes fixes, then writes hooks and titles. It stops for approval after every step: approve, edit, redo with a note, skip or stop. A live view shows the current step, what the agent is reading, tokens used and time elapsed. Runs survive restarts, and any run can be saved and replayed as a template. |
-| **Provenance Ledger and Model Router** | Every suggestion offered, accepted, edited or rejected is logged with module, model and time. Text is coloured by origin, with a human share computed from characters, and a Markdown disclosure statement can be exported. The router covers provider setup from live model lists (no model names are hardcoded), fast/balanced/deep tiers, rate budgets, a priority queue, a prompt-hash cache, automatic failover, a local fallback and a usage screen. |
+| Module                                 | What you can do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Studio Home**                        | Create, rename, archive and open projects (video series, podcast, fiction, comic). Get one next best action computed from project state. Launch any available module, read the activity timeline, and use the global command palette and search (Ctrl/⌘+K).                                                                                                                                                                                                                                                                                                                                    |
+| **Canon Vault**                        | Paste or upload `.txt`, `.md`, `.docx` or text-based `.pdf`. The AI proposes entries in 9 types, and each proposal shows its verbatim source passage. Approve, edit, merge, reject (with undo) or bulk-approve by type. Entry pages show relationships, every script mention and change history. Also: in-world timeline, relationship graph, open-promises tracker, and Markdown/JSON export.                                                                                                                                                                                                 |
+| **Script Studio**                      | CodeMirror editor that styles scene headings, speaker labels and notes. Autosaves every change, and counts words, scenes and runtime. Co-writer actions: continue, rewrite, tighten, expand, change tone, three alternatives, punch up dialogue, and free-form instruction. Results stream into suggestion cards (diff, reason, clickable evidence) that you accept, edit then accept, or reject with a reason. A canon side panel follows the cursor. Coach mode asks questions and writes nothing. Version history with visual compare and restore. Export to Markdown, plain text and Word. |
+| **Continuity Guard**                   | Checks a script against the vault and earlier episodes for six issue types. Shows both passages side by side, with severity, confidence and a proposed fix. You can apply the fix, edit the canon instead, or mark the issue intentional, which is remembered forever. Optional background check on save, plus a project health view. Standalone two-box mode.                                                                                                                                                                                                                                 |
+| **Voice Mirror**                       | Sample intake with an ownership confirmation. A voice profile measured in code: sentence-length distribution, vocabulary richness, signature phrases, punctuation, point of view, reading level, pacing and function-word fingerprint, with a short AI description on top. Line-level drift report with suggested rewrites. Several profiles per project. JSONL training-dataset export. Uses your Adaption voice model when one is connected.                                                                                                                                                 |
+| **Hook and Title Forge**               | Generates hooks, titles, thumbnail text and one-line descriptions for 5 platforms. Length limits are enforced in code and never exceeded. Every option is scored on clarity, curiosity, honesty and voice match, each with a reason. Clickbait is flagged with the missing payoff named. Shortlist, compare side by side, refine with a note, copy and export.                                                                                                                                                                                                                                 |
+| **Showrunner**                         | You state a goal, and the agent plans only from modules that can run right now. It drafts from the outline, checks continuity and voice, proposes fixes, then writes hooks and titles. It stops for approval after every step: approve, edit, redo with a note, skip or stop. A live view shows the current step, what the agent is reading, tokens used and time elapsed. Runs survive restarts, and any run can be saved and replayed as a template.                                                                                                                                         |
+| **Provenance Ledger and Model Router** | Every suggestion offered, accepted, edited or rejected is logged with module, model and time. Text is coloured by origin, with a human share computed from characters, and a Markdown disclosure statement can be exported. The router covers provider setup from live model lists (no model names are hardcoded), fast/balanced/deep tiers, rate budgets, a priority queue, a prompt-hash cache, automatic failover, a local fallback and a usage screen.                                                                                                                                     |
 
 Every module also works as a standalone tool with no project open. Every module is also a command: `pnpm kathix --help`.
 
@@ -86,15 +86,15 @@ The full design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The key prop
 
 ## Tech stack
 
-| Layer | Choice |
-| --- | --- |
-| Language | TypeScript (strict) in a pnpm workspace monorepo |
-| Server | Node.js 24, Hono, server-sent events for streaming |
-| Database | Node's built-in `node:sqlite` with FTS5. No native build step on any OS |
-| Client | React 19, Vite 8, CodeMirror 6, Inter and Literata bundled locally |
-| AI | Model Router over Anthropic (official SDK), OpenAI and OpenAI-compatible, Gemini, Ollama and Adaption, with zod schemas |
-| Tests | Vitest (unit, integration, prompt evals) and Playwright (demo path, UI truth test, performance) |
-| Quality | ESLint (typescript-eslint), Prettier, GitHub Actions CI |
+| Layer    | Choice                                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Language | TypeScript (strict) in a pnpm workspace monorepo                                                                        |
+| Server   | Node.js 24, Hono, server-sent events for streaming                                                                      |
+| Database | Node's built-in `node:sqlite` with FTS5. No native build step on any OS                                                 |
+| Client   | React 19, Vite 8, CodeMirror 6, Inter and Literata bundled locally                                                      |
+| AI       | Model Router over Anthropic (official SDK), OpenAI and OpenAI-compatible, Gemini, Ollama and Adaption, with zod schemas |
+| Tests    | Vitest (unit, integration, prompt evals) and Playwright (demo path, UI truth test, performance)                         |
+| Quality  | ESLint (typescript-eslint), Prettier, GitHub Actions CI                                                                 |
 
 ## Setup
 
@@ -114,19 +114,19 @@ This builds and starts the Studio at **http://127.0.0.1:4319**. On first launch,
 pnpm seed
 ```
 
-This loads the sample project, *The Lantern Keepers*, through the normal import paths, and works with no provider configured. You can also click **Open the sample project** in the Studio.
+This loads the sample project, _The Lantern Keepers_, through the normal import paths, and works with no provider configured. You can also click **Open the sample project** in the Studio.
 
 Other commands:
 
-| Command | What it does |
-| --- | --- |
-| `pnpm dev` | Studio with live reload |
-| `pnpm kathix --help` | Every module as a CLI command |
-| `pnpm test` | Everything: unit, integration, evals, then Playwright end-to-end (uses Playwright's Chromium if installed, else system Edge or Chrome) |
-| `pnpm test:unit` | Unit, integration and prompt evals only |
-| `pnpm evals:real` | Prompt evals against your real provider; results go to `docs/EVALS.md` |
-| `pnpm check` | Typecheck, lint, format check and all tests |
-| `pnpm backgrounds` | Rebuild the background image set |
+| Command              | What it does                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`           | Studio with live reload                                                                                                                |
+| `pnpm kathix --help` | Every module as a CLI command                                                                                                          |
+| `pnpm test`          | Everything: unit, integration, evals, then Playwright end-to-end (uses Playwright's Chromium if installed, else system Edge or Chrome) |
+| `pnpm test:unit`     | Unit, integration and prompt evals only                                                                                                |
+| `pnpm evals:real`    | Prompt evals against your real provider; results go to `docs/EVALS.md`                                                                 |
+| `pnpm check`         | Typecheck, lint, format check and all tests                                                                                            |
+| `pnpm backgrounds`   | Rebuild the background image set                                                                                                       |
 
 ## How AI is used
 
@@ -144,13 +144,13 @@ Other commands:
 
 ## Track and judging criteria
 
-| Criterion | Weight | How Kathix meets it |
-| --- | --- | --- |
-| Innovation and creative theme | 25% | It targets a specific creator bottleneck: staying consistent in canon and voice across a growing body of work. Every AI action is a proposal with its reason and evidence, and the creator decides. |
-| 50% functional prototype | 25% | Eight modules work end to end. A Playwright test runs the full demo path in about 30 seconds. The UI truth test clicks every visible control on every route and fails on any control with no effect. |
-| AI integration and depth | 25% | Multi-step Showrunner agent with checkpoints, retrieval over your own canon, schema-validated structured output, verbatim evidence verification, a multi-provider router with failover, and an Adaption custom-model path. |
-| Architecture and code quality | 15% | Modular monorepo with typed contracts. Modules register through manifests and never import each other's internals. 80 unit, integration and eval tests, plus end-to-end tests, lint, format and CI. |
-| UI/UX | 10% | The "Studio After Dark" theme uses a warm accent for the creator and a cool accent for AI. Each screen has one primary action, there are no greyed-out controls, and destructive actions offer undo. The UI is keyboard operable, uses the creator's language, and has a focus mode. |
+| Criterion                     | Weight | How Kathix meets it                                                                                                                                                                                                                                                                  |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Innovation and creative theme | 25%    | It targets a specific creator bottleneck: staying consistent in canon and voice across a growing body of work. Every AI action is a proposal with its reason and evidence, and the creator decides.                                                                                  |
+| 50% functional prototype      | 25%    | Eight modules work end to end. A Playwright test runs the full demo path in about 30 seconds. The UI truth test clicks every visible control on every route and fails on any control with no effect.                                                                                 |
+| AI integration and depth      | 25%    | Multi-step Showrunner agent with checkpoints, retrieval over your own canon, schema-validated structured output, verbatim evidence verification, a multi-provider router with failover, and an Adaption custom-model path.                                                           |
+| Architecture and code quality | 15%    | Modular monorepo with typed contracts. Modules register through manifests and never import each other's internals. 82 unit, integration and eval tests, plus end-to-end tests, lint, format and CI.                                                                                  |
+| UI/UX                         | 10%    | The "Studio After Dark" theme uses a warm accent for the creator and a cool accent for AI. Each screen has one primary action, there are no greyed-out controls, and destructive actions offer undo. The UI is keyboard operable, uses the creator's language, and has a focus mode. |
 
 ## Known limitations
 
